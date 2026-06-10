@@ -341,7 +341,6 @@ function Admin() {
 
       {activeTab === "products" && (
         <div>
-          {/* Sub-tab filter buttons for products */}
           <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
             <button
               className={`btn ${productFilter === "all" ? "btn-primary" : "btn-secondary"}`}

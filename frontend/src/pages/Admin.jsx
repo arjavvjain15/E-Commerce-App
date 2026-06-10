@@ -326,15 +326,10 @@ function Admin() {
                 >
                    Publish
                 </button>
-                {/* <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ flex: 1, minWidth: "120px", backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}
-                  onClick={() => handleProductSubmit(null, "draft")}
-                >
-                   Save as Draft
-                </button> */}
-                <button>
+                
+                <button className="btn btn-secondary"
+                style={{flex: 1, minWidth: "120px", backgroundColor: "var(--accent-bg)", color: "var(--accent)"}}
+                onClick={()=>handleProductSubmit(null,"draft")}>
                   Save as Draft
                 </button>
                 <button
@@ -458,6 +453,161 @@ function Admin() {
         </button>
       </div>
       
+      {/* Product Table */}
+      {activeTab === "products" && (
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {products.map((prod) => {
+                const buyer = users.find((u) => u.id === prod.userId);
+                return (
+                  <tr key={prod.id}>
+                    <td>
+                      <img
+                        src={prod.imageUrl}
+                        alt={prod.name}
+                        style={{ width: "40px", height: "40px", objectFit: "contain", borderRadius: "6px", backgroundColor: "#f3f4f6", padding: "4px" }}
+                      />
+                    </td>
+                    <td style={{ fontWeight: "600", color: "var(--text-h)" }}>{prod.name}</td>
+                    <td>{prod.Category?.name || "Uncategorized"}</td>
+                    <td style={{ fontWeight: "600" }}>INR {Number(prod.price).toFixed(2)}</td>
+                    <td>
+                      {prod.stock === 0 ? (
+                        <span className="badge-status cancelled">Out of Stock</span>
+                      ) : prod.stock <= 5 ? (
+                        <span className="badge-status pending">Low Stock ({prod.stock})</span>
+                      ) : (
+                        <span className="badge-status completed">{prod.stock} Units</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`badge-status ${prod.status === "active" ? "completed" : "draft"}`}>
+                        {prod.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: "8px" }}>
+                        {prod.status === "draft" && (
+                          <button
+                            className="btn btn-primary"
+                            style={{ padding: "6px 10px", fontSize: "0.8rem" }}
+                            onClick={async () => {
+                              try {
+                                await api.put(`/products/${prod.id}`, { status: "active" });
+                                showAlert("success", "Product published successfully!");
+                                fetchData();
+                              } catch (err) {
+                                showAlert("danger", "Failed to publish product.");
+                              }
+                            }}
+                          >
+                             Publish
+                          </button>
+                        )}
+                        <button className="btn btn-secondary" style={{ padding: "6px 10px", fontSize: "0.8rem" }} onClick={() => handleEditProduct(prod)}>
+                           Edit
+                        </button>
+                        <button className="btn btn-secondary" style={{ padding: "6px 10px", fontSize: "0.8rem", color: "var(--danger)" }} onClick={() => handleDeleteProduct(prod.id)}>
+                           Delete
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+
+
+      {/* Order Table */}
+      {activeTab === "orders" && (
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer id</th>
+                <th>Items Placed</th>
+                <th>Total Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {orders.map((ord) => {
+                const buyer = users.find((u) => u.id === ord.userId);
+                return (
+                  <tr key={ord.id}>
+                    <td style={{ fontWeight: "700" }}>#{ord.id}</td>
+                    <td>
+                      <div style={{ display: "flex", flexDirection: "column" }}>
+                        <span style={{ fontWeight: "600", color: "var(--text-h)" }}>{buyer?.name || "Unknown"}</span>
+                        <span style={{ fontSize: "0.75rem", color: "var(--text)" }}>{buyer?.email}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "0.85rem" }}>
+                        {ord.OrderItems?.map((item) => (
+                          <li key={item.id}>
+                            {item.Product?.name} (Qty:{item.quantity})
+                          </li>
+                        ))}
+                      </ul>
+                    </td>
+                    <td style={{ fontWeight: "700", color: "var(--text-h)" }}>
+                      INR {Number(ord.totalAmount).toFixed(2)}
+                    </td>
+                    <td>
+                      <span className={`badge-status ${ord.status}`}>
+                        {ord.status}
+                      </span>
+                    </td>
+                    <td>
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        {ord.status === "draft" ? (
+                          <button
+                            className="btn btn-primary"
+                            style={{ padding: "6px 12px", fontSize: "0.8rem" }}
+                            onClick={() => handleUploadDraft(ord.id)}
+                          >
+                            Upload (Submit)
+                          </button>
+                        ) : (
+                          <select
+                            className="review-select"
+                            style={{ padding: "4px 8px", fontSize: "0.8rem", width: "auto" }}
+                            value={ord.status}
+                            onChange={(e) => handleUpdateOrderStatus(ord.id, e.target.value)}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="completed">Completed</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
 
     </div>
   );
