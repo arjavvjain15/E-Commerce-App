@@ -17,6 +17,19 @@ function Admin() {
     categoryName: "",
     imageUrl: "",
   });
+  const [bannerForm, setBannerForm] = useState({
+    badge: "",
+    title: "",
+    subtitle: "",
+    imageUrl: "",
+    bg: "",
+    categoryId: "",
+  });
+  const [editingBanner,setEditingBanner]= useState(null);
+
+  const [showBannerModal,setShowBannerModal]= useState(false);
+
+  const [banners,setBanners]= useState([]);
    
   const [productFilter, setProductFilter] = useState("all");
 
@@ -29,14 +42,16 @@ function Admin() {
 
   const fetchData = async () => {
     try {
-      const [productsRes, ordersRes, usersRes] = await Promise.all([
+      const [productsRes, ordersRes, usersRes, bannersRes] = await Promise.all([
         api.get("/products?includeDrafts=true"),
         api.get("/admin/orders"),
         api.get("/admin/users"),
+        api.get("/banners"),
       ]);
       setProducts(productsRes.data);
       setOrders(ordersRes.data);
       setUsers(usersRes.data);
+      setBanners(bannersRes.data);
     } catch (err) {
       console.error("Failed to load dashboard data", err);
       showAlert("danger", "Failed to load dashboard data. Please try again.");
@@ -146,6 +161,67 @@ function Admin() {
     }
   };
 
+  const handleBannerSubmit = async (e) => {
+    if (e) e.preventDefault();
+    try {
+      const payload = {
+        badge: bannerForm.badge,
+        title: bannerForm.title,
+        subtitle: bannerForm.subtitle,
+        imageUrl: bannerForm.imageUrl,
+        bg: bannerForm.bg || "linear-gradient(135deg, #1e3a8a, #0f172a)",
+        categoryId: bannerForm.categoryId ? parseInt(bannerForm.categoryId, 10) : null,
+      };
+
+      if (editingBanner) {
+        await api.put(`/banners/${editingBanner.id}`, payload);
+        showAlert("success", "Banner updated successfully!");
+      } else {
+        await api.post("/banners", payload);
+        showAlert("success", "Banner created successfully!");
+      }
+      setShowBannerModal(false);
+      setEditingBanner(null);
+      setBannerForm({
+        badge: "",
+        title: "",
+        subtitle: "",
+        imageUrl: "",
+        bg: "",
+        categoryId: "",
+      });
+      fetchData();
+    } catch (err) {
+      console.error(err);
+      showAlert("danger", err.response?.data?.message || "Failed to save banner.");
+    }
+  };
+
+  const handleEditBanner = (banner) => {
+    setEditingBanner(banner);
+    setBannerForm({
+      badge: banner.badge || "",
+      title: banner.title || "",
+      subtitle: banner.subtitle || "",
+      imageUrl: banner.imageUrl || "",
+      bg: banner.bg || "",
+      categoryId: banner.categoryId || "",
+    });
+    setShowBannerModal(true);
+  };
+
+  const handleDeleteBanner=async(bannerId)=>{
+    if(!window.confirm("Are you sure?")) return;
+    try{
+      await api.delete(`/banners/${bannerId}`);
+      showAlert("success","Banner Deleted");
+      fetchData();
+    }
+    catch(error){
+      console.log(error);
+      showAlert("danger","Failed to Delete");
+    }
+  };
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -425,6 +501,11 @@ function Admin() {
         >
         Customers
         </button>
+
+        <button className={`admin-tab-btn ${activeTab === "banners" ? "active" : ""}`}
+        onClick={()=>setActiveTab("banners")}>
+        Banners
+        </button>
       </div>
       
       {/* Product Table */}
@@ -528,7 +609,6 @@ function Admin() {
           </div>
         </div>
       )}
-
 
 
       {/* Order Table */}
@@ -637,6 +717,208 @@ function Admin() {
         </div>
       )}
 
+
+      {/* Banners */}
+      {activeTab === "banners" && (
+        <div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
+            <h3 style={{ margin: 0, color: "var(--text-h)" }}>Banner Advertisements</h3>
+            <button
+              className="btn btn-primary"
+              onClick={() => {
+                setEditingBanner(null);
+                setBannerForm({
+                  badge: "",
+                  title: "",
+                  subtitle: "",
+                  imageUrl: "",
+                  bg: "",
+                  categoryId: "",
+                });
+                setShowBannerModal(true);
+              }}
+            >
+              Add Banner
+            </button>
+          </div>
+
+          <div className="admin-table-container">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Image Preview</th>
+                  <th>Title / Subtitle</th>
+                  <th>Badge</th>
+                  <th>Category</th>
+                  <th>Background</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {banners.length === 0 ? (
+                  <tr>
+                    <td colSpan="6" style={{ textAlign: "center", padding: "24px", fontStyle: "italic", color: "var(--text)" }}>
+                      No banners found in database. The storefront will fall back to mock banners.
+                    </td>
+                  </tr>
+                ) : (
+                  banners.map((b) => (
+                    <tr key={b.id}>
+                      <td>
+                        <img
+                          src={b.imageUrl}
+                          alt={b.title}
+                          style={{ width: "80px", height: "60px", objectFit: "cover", borderRadius: "6px", border: "1px solid var(--border)" }}
+                        />
+                      </td>
+                      <td style={{ fontWeight: "600", color: "var(--text-h)" }}>
+                        <div>{b.title}</div>
+                        <div style={{ fontSize: "0.8rem", fontWeight: "normal", color: "var(--text)", marginTop: "4px" }}>{b.subtitle}</div>
+                      </td>
+                      <td>
+                        {b.badge ? <span className="badge-status completed" style={{ fontSize: "0.7rem" }}>{b.badge}</span> : <span style={{ color: "var(--text)", fontStyle: "italic" }}>None</span>}
+                      </td>
+                      <td style={{ fontWeight: "500" }}>
+                        {b.Category?.name || "None"}
+                      </td>
+                      <td style={{ fontSize: "0.8rem", fontFamily: "monospace", maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={b.bg}>
+                        <div style={{ display: "inline-block", width: "16px", height: "16px", borderRadius: "4px", background: b.bg || "#1e3a8a", marginRight: "6px", verticalAlign: "middle", border: "1px solid var(--border)" }} />
+                        {b.bg || "default gradient"}
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "8px" }}>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: "6px 10px", fontSize: "0.8rem" }}
+                            onClick={() => handleEditBanner(b)}
+                          >
+                          Edit
+                          </button>
+                          <button
+                            className="btn btn-secondary"
+                            style={{ padding: "6px 10px", fontSize: "0.8rem", color: "var(--danger)" }}
+                            onClick={() => handleDeleteBanner(b.id)}
+                          >
+                          Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Banner Edit / Add Modal */}
+      {showBannerModal && (
+        <div className="admin-form-modal">
+          <div className="admin-modal-content" style={{ maxWidth: "550px" }}>
+            <h3 className="admin-modal-title">{editingBanner ? "Edit Banner" : "Add New Banner"}</h3>
+            <form onSubmit={handleBannerSubmit}>
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Banner Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Up to 70% off Headphones"
+                  className="search-input"
+                  style={{ width: "100%", paddingLeft: "12px" }}
+                  value={bannerForm.title}
+                  onChange={(e) => setBannerForm({ ...bannerForm, title: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Badge Label (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Limited time offer, Deal of the Day"
+                  className="search-input"
+                  style={{ width: "100%", paddingLeft: "12px" }}
+                  value={bannerForm.badge}
+                  onChange={(e) => setBannerForm({ ...bannerForm, badge: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Subtitle Description (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Upgrade your sound with high performance gear"
+                  className="search-input"
+                  style={{ width: "100%", paddingLeft: "12px" }}
+                  value={bannerForm.subtitle}
+                  onChange={(e) => setBannerForm({ ...bannerForm, subtitle: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Image URL</label>
+                <input
+                  type="url"
+                  required
+                  placeholder="e.g. https://images.unsplash.com/photo-..."
+                  className="search-input"
+                  style={{ width: "100%", paddingLeft: "12px" }}
+                  value={bannerForm.imageUrl}
+                  onChange={(e) => setBannerForm({ ...bannerForm, imageUrl: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Background Color / Gradient (optional)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. #1e3a8a or linear-gradient(135deg, #1e3a8a, #0f172a)"
+                  className="search-input"
+                  style={{ width: "100%", paddingLeft: "12px" }}
+                  value={bannerForm.bg}
+                  onChange={(e) => setBannerForm({ ...bannerForm, bg: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: "24px" }}>
+                <label className="review-form-label">Target Category Filter (optional)</label>
+                <select
+                  className="review-select"
+                  value={bannerForm.categoryId}
+                  onChange={(e) => setBannerForm({ ...bannerForm, categoryId: e.target.value })}
+                >
+                  <option value="">-- No Category Target (General Banner) --</option>
+                  {Array.from(new Set(products.map(p => p.Category?.name || p.category))).filter(Boolean).map(catName => {
+                    const prod = products.find(p => p.Category?.name === catName || p.category === catName);
+                    const catId = prod?.Category?.id || prod?.categoryId || "";
+                    return (
+                      <option key={catName} value={catId}>
+                        {catName}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+
+              <div style={{ display: "flex", gap: "12px" }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                  Save Banner
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1 }}
+                  onClick={() => setShowBannerModal(false)}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      
 
 
     </div>

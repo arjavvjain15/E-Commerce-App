@@ -29,6 +29,22 @@ const BANNERS = [
     bg: "#f97316",
     image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60",
   },
+  {
+    id: 4,
+    badge: "Limited time offer",
+    title: "Up to 70% off Bestselling Audio",
+    subtitle: "Upgrade your sound with headphones, earbuds, and speakers",
+    bg: "#1e3a8a",
+    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
+  },
+  {
+    id: 2,
+    badge: "Power & Performance",
+    title: "Up to 40% off Flagship Laptops",
+    subtitle: "High performance laptops for productivity, gaming, and design",
+    bg: "grey",
+    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60",
+  },
 ];
 
 const CATEGORY_PROMOS = [
@@ -90,15 +106,15 @@ function Home() {
     };
     fetchProducts();
   }, []);
-
-  useEffect(() => {
-    if (isHovered) return;
-    const timer = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % BANNERS.length);
-    }, 4000);
-    return () => clearInterval(timer);
-  }, [isHovered]);
-
+  
+  useEffect(()=>{
+    if(isHovered) return;
+    const timer=setInterval(()=>{
+      setCurrentSlide((prev)=>(prev+1)%BANNERS.length);
+    },3000);
+    return ()=> clearInterval(timer);
+  },[isHovered]);
+  
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % BANNERS.length);
   };

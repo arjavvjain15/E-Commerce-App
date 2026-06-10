@@ -161,7 +161,8 @@ function ProductDetails() {
         </div>
       </div>
 
-      {/* Reviews Section */}
+
+
       <div className="reviews-section">
         <h2 className="reviews-header-title">Customer Reviews</h2>
         <div className="reviews-layout">
@@ -241,13 +242,11 @@ function ProductDetails() {
                     required
                   />
                 </div>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="btn btn-primary"
-                  style={{ width: "100%" }}
-                >
-                  {submitting ? "Submitting..." : "Submit Review"}
+                <button type="submit" 
+                disabled={submitting} 
+                className="btn btn-primary"
+                 style={{width:"100%"}}>
+                  {submitting? "Submitting..." : "Submit Review"}
                 </button>
               </form>
             )}

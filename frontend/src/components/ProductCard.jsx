@@ -1,6 +1,11 @@
 import { Link } from "react-router-dom";
 import { useWishlist } from "../context/WishlistContext";
 import { useCart } from "../context/CartContext";
+import { FaShoppingCart } from "react-icons/fa";
+import { CiHeart } from "react-icons/ci";
+import { FaHeart } from "react-icons/fa";
+
+
 
 function ProductCard({ product }) {
   const { wishlist, toggleWishlist } = useWishlist();
@@ -26,13 +31,13 @@ function ProductCard({ product }) {
           className={`btn btn-wishlist ${isInWishlist ? "active" : ""}`}
           onClick={() => toggleWishlist(product)}
         >
-          {isInWishlist ? "Wishlist" : "Wishlist"}
+          {isInWishlist ?  <FaHeart/>: <CiHeart></CiHeart>}
         </button>
         <button 
           className="btn btn-primary"
           onClick={() => addToCart(product)}
         >
-          {quantity > 0 ? `Added (${quantity})` : "Add to Cart"}
+          {quantity > 0 ? `Added (${quantity})` : <FaShoppingCart></FaShoppingCart>}
         </button>
       </div>
     </div>

@@ -3,6 +3,11 @@ import { useTheme } from "../context/ThemeContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
+import { IoMdMoon } from "react-icons/io";
+import { IoMdSunny } from "react-icons/io";
+import { CiUser } from "react-icons/ci";
+
+
 
 function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -68,14 +73,15 @@ function Navbar() {
                 fontSize: "0.9rem",
                 fontWeight: "600",
                 color: "var(--text-h)",
+                justifyContent:"center",
               }}
             >
-              Hi, {user.name} ({user.role})
+               <CiUser style={{marginTop:"2px",paddingBottom:"2px",fontSize:"1.5rem"}}></CiUser> {user.name}
             </span>
             <button
               className="btn btn-secondary"
               onClick={handleLogout}
-              style={{ padding: "6px 12px" }}
+              style={{ padding: "6px 12px"}}
             >
               Logout
             </button>
@@ -86,7 +92,7 @@ function Navbar() {
           onClick={toggleTheme}
           title="Toggle Dark/Light Mode"
         >
-          {theme === "light" ? "Dark" : " Light"}
+          {theme === "light" ? <IoMdMoon></IoMdMoon> : <IoMdSunny style={{color:"white"}}></IoMdSunny>}
         </button>
       </div>
     </nav>

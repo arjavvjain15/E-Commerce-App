@@ -1,5 +1,6 @@
 import { useCart } from "../context/CartContext";
 import api from "../api";
+import { FaShoppingCart } from "react-icons/fa";
 
 function Cart() {
   const { cartItems, remove,clearCart, fetchCart, increaseQuantity, decreaseQuantity } = useCart();

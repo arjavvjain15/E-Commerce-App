@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api";
+import { FaShoppingCart } from "react-icons/fa";
 
 function MyOrders() {
   const [orders, setOrders] = useState([]);
@@ -53,7 +54,7 @@ function MyOrders() {
   if (error) {
     return (
       <div className="orders-page empty-state" style={{ padding: "60px 20px", textAlign: "center" }}>
-        <h2 style={{ color: "var(--danger)" }}>⚠️ {error}</h2>
+        <h2 style={{ color: "var(--danger)" }}> {error}</h2>
         <button className="btn btn-primary" onClick={fetchOrders} style={{ marginTop: "16px" }}>
           Retry
         </button>
@@ -72,7 +73,7 @@ function MyOrders() {
 
       {orders.length === 0 ? (
         <div className="orders-empty-state">
-          <span style={{ fontSize: "4rem", marginBottom: "16px", display: "block" }}>🛍️</span>
+          <span style={{ fontSize: "4rem", marginBottom: "16px", display: "block" }}><FaShoppingCart></FaShoppingCart></span>
           <h2>No orders placed yet</h2>
           <p style={{ color: "var(--text)", margin: "12px 0 24px" }}>
             Looks like you haven't placed any orders yet. Check out our amazing products catalog!
