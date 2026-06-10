@@ -7,7 +7,6 @@ function Admin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
-
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState({
@@ -67,31 +66,6 @@ function Admin() {
       draftProducts,
     };
   }, [products, orders, users]);
-
-
-  const recentBuyers = useMemo(() => {
-    const buyerMap = {};
-    orders.forEach((order) => {
-      if (order.status !== "cancelled" && order.status !== "draft") {
-        const uId = order.userId;
-        const buyerUser = users.find((u) => u.id === uId);
-        if (buyerUser) {
-          if (!buyerMap[uId]) {
-            buyerMap[uId] = {
-              id: uId,
-              name: buyerUser.name,
-              email: buyerUser.email,
-              totalSpent: 0,
-            };
-          }
-          buyerMap[uId].totalSpent += Number(order.totalAmount);
-        }
-      }
-    });
-    return Object.values(buyerMap)
-      .sort((a, b) => b.totalSpent - a.totalSpent)
-      .slice(0, 4);
-  }, [orders, users]);
 
 
   const filteredProducts = useMemo(() => {
@@ -455,23 +429,46 @@ function Admin() {
       
       {/* Product Table */}
       {activeTab === "products" && (
-        <div className="admin-table-container">
-          <table className="admin-table">
-            <thead>
-              <tr>
-                <th>Image</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Price</th>
-                <th>Stock</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {products.map((prod) => {
-                const buyer = users.find((u) => u.id === prod.userId);
-                return (
+        <div>
+          <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
+            <button
+              className={`btn ${productFilter === "all" ? "btn-primary" : "btn-secondary"}`}
+              style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+              onClick={() => setProductFilter("all")}
+            >
+              All Products
+            </button>
+            <button
+              className={`btn ${productFilter === "active" ? "btn-primary" : "btn-secondary"}`}
+              style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+              onClick={() => setProductFilter("active")}
+            >
+              Active 
+            </button>
+            <button
+              className={`btn ${productFilter === "draft" ? "btn-primary" : "btn-secondary"}`}
+              style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+              onClick={() => setProductFilter("draft")}
+            >
+              Drafts
+            </button>
+          </div>
+
+          <div className="admin-table-container">
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Image</th>
+                  <th>Product Name</th>
+                  <th>Category</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filteredProducts.map((prod) => (
                   <tr key={prod.id}>
                     <td>
                       <img
@@ -525,10 +522,10 @@ function Admin() {
                       </div>
                     </td>
                   </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 
@@ -553,7 +550,7 @@ function Admin() {
                 const buyer = users.find((u) => u.id === ord.userId);
                 return (
                   <tr key={ord.id}>
-                    <td style={{ fontWeight: "700" }}>#{ord.id}</td>
+                    <td style={{ fontWeight: "700" }}>{ord.id}</td>
                     <td>
                       <div style={{ display: "flex", flexDirection: "column" }}>
                         <span style={{ fontWeight: "600", color: "var(--text-h)" }}>{buyer?.name || "Unknown"}</span>
@@ -608,6 +605,39 @@ function Admin() {
           </table>
         </div>
       )}
+
+
+      {/* Customers Table */}
+      {activeTab === "customers" && (
+        <div className="admin-table-container">
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>User ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+              </tr>
+            </thead>
+            <tbody>
+                {users.map((u) => (
+                  <tr key={u.id}>
+                    <td style={{ fontWeight: "700" }}>{u.id}</td>
+                    <td style={{ fontWeight: "600", color: "var(--text-h)" }}>{u.name}</td>
+                    <td>{u.email}</td>
+                    <td>
+                      <span className={`badge-status ${u.role === "admin" ? "pending" : "draft"}`}>
+                        {u.role}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+
 
     </div>
   );
