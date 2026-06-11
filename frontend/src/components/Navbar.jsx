@@ -3,11 +3,6 @@ import { useTheme } from "../context/ThemeContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
-import { IoMdMoon } from "react-icons/io";
-import { IoMdSunny } from "react-icons/io";
-import { CiUser } from "react-icons/ci";
-
-
 
 function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -68,20 +63,40 @@ function Navbar() {
               marginRight: "12px",
             }}
           >
-            <span
-              style={{
-                fontSize: "0.9rem",
-                fontWeight: "600",
-                color: "var(--text-h)",
-                justifyContent:"center",
-              }}
-            >
-               <CiUser style={{marginTop:"2px",paddingBottom:"2px",fontSize:"1.5rem"}}></CiUser> {user.name}
-            </span>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+              <div
+                style={{
+                  width: "32px",
+                  height: "32px",
+                  borderRadius: "50%",
+                  backgroundColor: "var(--accent-bg)",
+                  color: "var(--accent)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: "700",
+                  fontSize: "0.9rem",
+                  boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                  border: "1px solid var(--border)",
+                }}
+                title={`${user.name} (${user.role})`}
+              >
+                {user.name ? user.name.charAt(0).toUpperCase() : "U"}
+              </div>
+              <span
+                style={{
+                  fontSize: "0.95rem",
+                  fontWeight: "600",
+                  color: "var(--text-h)",
+                }}
+              >
+                {user.name}
+              </span>
+            </div>
             <button
               className="btn btn-secondary"
               onClick={handleLogout}
-              style={{ padding: "6px 12px"}}
+              style={{ padding: "6px 12px" }}
             >
               Logout
             </button>
@@ -92,7 +107,7 @@ function Navbar() {
           onClick={toggleTheme}
           title="Toggle Dark/Light Mode"
         >
-          {theme === "light" ? <IoMdMoon></IoMdMoon> : <IoMdSunny style={{color:"white"}}></IoMdSunny>}
+          {theme === "light" ? "Dark" : " Light"}
         </button>
       </div>
     </nav>

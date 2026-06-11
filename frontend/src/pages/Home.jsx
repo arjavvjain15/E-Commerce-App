@@ -8,42 +8,38 @@ const BANNERS = [
   {
     id: 1,
     badge: "Limited time offer",
-    title: "Up to 70% off Bestselling Audio",
+    title: "Bestselling Audio",
     subtitle: "Upgrade your sound with headphones, earbuds, and speakers",
-    bg: "#1e3a8a",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
+    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
   },
   {
     id: 2,
     badge: "Power & Performance",
-    title: "Up to 40% off Flagship Laptops",
+    title: "Flagship Laptops",
     subtitle: "High performance laptops for productivity, gaming, and design",
-    bg: "grey",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60",
+    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
   },
   {
     id: 3,
     badge: "Next-Gen Tech",
-    title: "Ultimate Smartphone Deals",
+    title: "Ultimate Smartphone",
     subtitle: "Get the latest smartphones with exchange offers and no-cost EMI",
-    bg: "#f97316",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60",
+    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
+ 
   },
   {
     id: 4,
-    badge: "Limited time offer",
-    title: "Up to 70% off Bestselling Audio",
-    subtitle: "Upgrade your sound with headphones, earbuds, and speakers",
-    bg: "#1e3a8a",
-    image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&auto=format&fit=crop&q=60",
+    badge: "New Arrival",
+    title: "Smart Watches",
+    subtitle: "Track your fitness and stay connected on the go",
+    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
   },
   {
-    id: 2,
-    badge: "Power & Performance",
-    title: "Up to 40% off Flagship Laptops",
-    subtitle: "High performance laptops for productivity, gaming, and design",
-    bg: "grey",
-    image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&auto=format&fit=crop&q=60",
+    id: 5,
+    badge: "Gamer's Choice",
+    title: "Console Gaming",
+    subtitle: "Experience next-gen gaming with top-tier consoles",
+    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
   },
 ];
 
@@ -74,20 +70,85 @@ const CATEGORY_PROMOS = [
   },
 ];
 
-
-function Home() {
-  const [products, setProducts] = useState([]);
-  const [search, setSearch] = useState("");
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [currentSlide, setCurrentSlide] = useState(0);
+const BannerCarousel = ({ banners, initialSlide = 0 }) => {
+  const [currentSlide, setCurrentSlide] = useState(initialSlide);
   const [isHovered, setIsHovered] = useState(false);
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    if (isHovered) return;
+    const timer = setInterval(() => {
+      setCurrentSlide((prev) => (prev + 1) % banners.length);
+    }, 4000); // 4 seconds
+    return () => clearInterval(timer);
+  }, [isHovered, banners.length]);
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % banners.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
+  };
+
+  return (
+    <div
+      className="banner-carousel"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      <div className="carousel-track">
+        {banners.map((banner, index) => (
+          <div
+            key={banner.id}
+            className={`carousel-slide ${index === currentSlide ? "active" : ""}`}
+            style={{ background: banner.bg }}
+          >
+            <div className="slide-info">
+              <span className="slide-badge">{banner.badge}</span>
+              <h2 className="slide-title">{banner.title}</h2>
+              <p className="slide-subtitle">{banner.subtitle}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button className="carousel-arrow prev" onClick={prevSlide} aria-label="Previous Slide">
+        ‹
+      </button>
+      <button className="carousel-arrow next" onClick={nextSlide} aria-label="Next Slide">
+        ›
+      </button>
+
+      <div className="carousel-dots">
+        {banners.map((_, index) => (
+          <button
+            key={index}
+            className={`carousel-dot ${index === currentSlide ? "active" : ""}`}
+            onClick={() => setCurrentSlide(index)}
+            aria-label={`Go to slide ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+function Home() {
+  const [products, setProducts] = useState([]);
+  const [banners, setBanners] = useState([]);
+  const [search, setSearch] = useState("");
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
       try {
-        const res = await api.get("/products");
-        const items = res.data.map((product) => ({
+        const [productsRes, bannersRes] = await Promise.all([
+          api.get("/products"),
+          api.get("/banners")
+        ]);
+
+        const items = productsRes.data.map((product) => ({
           id: product.id,
           title: product.name,
           description: product.description,
@@ -98,30 +159,29 @@ function Home() {
           stock: product.stock,
         }));
         setProducts(items);
+
+        if (bannersRes.data && bannersRes.data.length > 0) {
+          const apiBanners = bannersRes.data.map((b) => ({
+            id: b.id,
+            badge: b.badge,
+            title: b.title,
+            subtitle: b.subtitle,
+            bg: `linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('${b.imageUrl}') center/cover no-repeat`,
+          }));
+          setBanners(apiBanners);
+        } else {
+          setBanners(BANNERS);
+        }
+
       } catch (err) {
-        console.error("Failed to load products from API", err);
+        console.error("Failed to load data from API", err);
+        setBanners(BANNERS); 
       } finally {
         setLoading(false);
       }
     };
-    fetchProducts();
+    fetchData();
   }, []);
-  
-  useEffect(()=>{
-    if(isHovered) return;
-    const timer=setInterval(()=>{
-      setCurrentSlide((prev)=>(prev+1)%BANNERS.length);
-    },3000);
-    return ()=> clearInterval(timer);
-  },[isHovered]);
-  
-  const nextSlide = () => {
-    setCurrentSlide((prev) => (prev + 1) % BANNERS.length);
-  };
-
-  const prevSlide = () => {
-    setCurrentSlide((prev) => (prev - 1 + BANNERS.length) % BANNERS.length);
-  };
 
   const toggleCategory = (cat) => {
     setSelectedCategories((prev) =>
@@ -157,47 +217,14 @@ function Home() {
 
   return (
     <div className="home-container">
-      <div
-        className="banner-carousel"
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-      >
-        <div className="carousel-track">
-          {BANNERS.map((banner, index) => (
-            <div
-              key={banner.id}
-              className={`carousel-slide ${index === currentSlide ? "active" : ""}`}
-              style={{ background: banner.bg }}
-            >
-              <div className="slide-info">
-                <span className="slide-badge">{banner.badge}</span>
-                <h2 className="slide-title">{banner.title}</h2>
-                <p className="slide-subtitle">{banner.subtitle}</p>
-              </div>
-              <div className="slide-image-wrapper">
-                <img src={banner.image} alt={banner.title} className="slide-image" />
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <button className="carousel-arrow prev" onClick={prevSlide} aria-label="Previous Slide">
-          ‹
-        </button>
-        <button className="carousel-arrow next" onClick={nextSlide} aria-label="Next Slide">
-          ›
-        </button>
-
-        <div className="carousel-dots">
-          {BANNERS.map((_, index) => (
-            <button
-              key={index}
-              className={`carousel-dot ${index === currentSlide ? "active" : ""}`}
-              onClick={() => setCurrentSlide(index)}
-              aria-label={`Go to slide ${index + 1}`}
-            />
-          ))}
-        </div>
+      <div className="banners-row">
+        {banners.length > 0 && (
+          <>
+            <BannerCarousel banners={banners} initialSlide={0} />
+            <BannerCarousel banners={banners} initialSlide={Math.min(1, banners.length - 1)} />
+            <BannerCarousel banners={banners} initialSlide={Math.min(2, banners.length - 1)} />
+          </>
+        )}
       </div>
       
       <div className="filters-bar" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", width: "100%", marginBottom: "24px" }}>

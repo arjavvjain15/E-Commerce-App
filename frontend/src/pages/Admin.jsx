@@ -856,7 +856,7 @@ function Admin() {
               </div>
 
               <div style={{ marginBottom: "16px" }}>
-                <label className="review-form-label">Image URL</label>
+                <label className="review-form-label">Background Image URL</label>
                 <input
                   type="url"
                   required

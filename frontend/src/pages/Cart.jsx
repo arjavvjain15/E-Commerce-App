@@ -1,22 +1,31 @@
+import { useState } from "react";
 import { useCart } from "../context/CartContext";
 import api from "../api";
-import { FaShoppingCart } from "react-icons/fa";
 
 function Cart() {
-  const { cartItems, remove,clearCart, fetchCart, increaseQuantity, decreaseQuantity } = useCart();
+  const { cartItems, remove, clearCart, increaseQuantity, decreaseQuantity, fetchCart } = useCart();
+
+  const [showCheckoutModal, setShowCheckoutModal] = useState(false);
+  const [shippingAddress, setShippingAddress] = useState("");
+  const [isCheckingOut, setIsCheckingOut] = useState(false);
 
   const totalPrice = cartItems.reduce((total, item) => total + item.price * item.quantity, 0);
 
-  const handleCheckout = async () => {
-    const shippingAddress = prompt("Please enter your shipping address:");
-    if (!shippingAddress) return;
+  const handleCheckoutSubmit = async (e) => {
+    e.preventDefault();
+    if (!shippingAddress.trim()) return;
 
+    setIsCheckingOut(true);
     try {
       await api.post("/orders", { shippingAddress });
       alert("Order placed successfully!");
       await fetchCart();
+      setShowCheckoutModal(false);
+      setShippingAddress("");
     } catch (err) {
       alert(err.response?.data?.message || "Checkout failed");
+    } finally {
+      setIsCheckingOut(false);
     }
   };
 
@@ -75,12 +84,49 @@ function Cart() {
             <button className="btn btn-secondary btn-full" onClick={clearCart}>
               Clear Cart
             </button>
-            <button className="btn btn-primary btn-full" onClick={handleCheckout}>
+            <button className="btn btn-primary btn-full" onClick={() => setShowCheckoutModal(true)}>
               Proceed to Checkout
             </button>
           </div>
         </div>
       </div>
+      {showCheckoutModal && (
+        <div className="admin-form-modal">
+          <div className="admin-modal-content" style={{ maxWidth: "500px" }}>
+            <h3 className="admin-modal-title">Shipping Details</h3>
+            <form onSubmit={handleCheckoutSubmit}>
+              <div style={{ marginBottom: "20px" }}>
+                <label className="review-form-label">Delivery Address</label>
+                <textarea
+                  required
+                  className="review-textarea"
+                  style={{ width: "100%", height: "100px", marginTop: "8px" }}
+                  placeholder="Enter your full shipping address (Street, City, Postal Code, etc.)"
+                  value={shippingAddress}
+                  onChange={(e) => setShippingAddress(e.target.value)}
+                />
+              </div>
+              <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowCheckoutModal(false)}
+                  disabled={isCheckingOut}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isCheckingOut}
+                >
+                  {isCheckingOut ? "Processing..." : "Confirm Order"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
