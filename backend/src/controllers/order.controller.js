@@ -1,4 +1,5 @@
 import { checkoutCart, getOrdersByUser, getOrderDetailsById } from "../services/order.service.js";
+import { getbyId } from "../services/order.services.js";
 
 export const create = async (req, res, next) => {
   try {
@@ -35,3 +36,25 @@ export const getOrderDetails = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getall=async(req,res,next)=>{
+    try{
+        const orders=await getOrdersByUser(req.user.id);
+        if(!orders) return res.status(404).json({message:"Users not found"});
+        res.status(200).json(orders);
+    }
+    catch(errror){
+        next(error);
+    }
+}
+
+export const getbyid= async(req,res,next)=>{
+    try{
+        const order=getbyId(req.user.id);
+        if(!order) return res.status(404).json({messgae:"Not found"})
+        res.status(200).json(order);
+    }
+    catch(error){
+        next(error);
+    }
+}

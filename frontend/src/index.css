@@ -1302,7 +1302,8 @@ p {
   box-shadow: var(--shadow-lg);
   max-height: 90vh;
   overflow-y: auto;
-  padding-top: 10px;
+  padding-top: 2px;
+  padding-bottom:4px;
 }
 
 .admin-modal-title {
@@ -1310,6 +1311,7 @@ p {
   font-weight: 700;
   color: var(--text-h);
   margin-bottom: 20px;
+  margin-top:10px;
 }
 
 /* Home Banner Carousel Styles */

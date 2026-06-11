@@ -78,7 +78,7 @@ const BannerCarousel = ({ banners, initialSlide = 0 }) => {
     if (isHovered) return;
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % banners.length);
-    }, 4000); // 4 seconds
+    }, 4000); 
     return () => clearInterval(timer);
   }, [isHovered, banners.length]);
 
@@ -89,6 +89,9 @@ const BannerCarousel = ({ banners, initialSlide = 0 }) => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
+  const nextToNext=()=>{
+    setCurrentSlide((prev)=>(prev+1+1)%banners.length);
+  }
 
   return (
     <div
@@ -226,7 +229,7 @@ function Home() {
           </>
         )}
       </div>
-      
+  
       <div className="filters-bar" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", width: "100%", marginBottom: "24px" }}>
         <div className="search-wrapper" style={{ flex: 1, minWidth: "280px" }}>
           <input
@@ -263,6 +266,7 @@ function Home() {
         </div>
       </div>
 
+      <div className="main-catalog-title">Shop by Category</div>
       <div className="amazon-category-grid">
         {CATEGORY_PROMOS.map((promo) => (
           <div 
@@ -284,7 +288,7 @@ function Home() {
 
 
       <div id="main-catalog" style={{ scrollMarginTop: "20px", marginTop: "32px" }}>
-        <h2 className="main-catalog-title">Explore</h2>
+        <h2 className="main-catalog-title">Explore All Products</h2>
       </div>
 
 

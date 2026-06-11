@@ -82,7 +82,27 @@ function Admin() {
     };
   }, [products, orders, users]);
 
+  // const recentBuyers = useMemo(() => {
+  //   const buyerMap = {};
+  //   orders.forEach((order) => {
+  //     if (order.status !== "cancelled" && order.status !== "draft") {
+  //       const uId = order.userId;
+  //       const buyerUser = users.find((u) => u.id === uId);
+  //       if (buyerUser) {
+  //         if (!buyerMap[uId]) {
+  //           buyerMap[uId] = {
+  //             id: uId,
+  //             name: buyerUser.name,
+  //             email: buyerUser.email,
+  //             totalSpent: 0,
+  //           };
+  //         }
+  //         buyerMap[uId].totalSpent += Number(order.totalAmount);
+  //       }
+  //     }
+  //   });
 
+  // aws
   const filteredProducts = useMemo(() => {
     if (productFilter === "active") {
       return products.filter((p) => p.status === "active");
@@ -303,7 +323,7 @@ function Admin() {
                 <textarea
                   required
                   className="review-textarea"
-                  placeholder="Detailed description of the product..."
+                  placeholder="Provide detailed description of the product."
                   value={productForm.description}
                   onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
                 />
@@ -319,7 +339,7 @@ function Admin() {
                     required
                     className="search-input"
                     style={{ paddingLeft: "16px" }}
-                    placeholder="99999"
+                    placeholder="Enter Price"
                     value={productForm.price}
                     onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
                   />
@@ -332,7 +352,7 @@ function Admin() {
                     required
                     className="search-input"
                     style={{ paddingLeft: "16px" }}
-                    placeholder="50"
+                    placeholder="Enter Stock"
                     value={productForm.stock}
                     onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
                   />
@@ -347,7 +367,7 @@ function Admin() {
                   onChange={(e) => setProductForm({ ...productForm, categoryName: e.target.value })}
                   required
                 >
-                  <option value="">-- Select Category --</option>
+                  <option value="">Select Category -</option>
                   <option value="Laptop">Laptop</option>
                   <option value="Mobile">Mobile</option>
                   <option value="Audio">Audio</option>
@@ -363,6 +383,7 @@ function Admin() {
                   className="search-input"
                   style={{ paddingLeft: "16px" }}
                   value={productForm.imageUrl}
+                  placeholder="Enter URL"
                   onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
                 />
               </div>
@@ -479,7 +500,7 @@ function Admin() {
 
       </div>
 
-      <div className="admin-tabs">
+      <div className="admin-tabs" onLoad={()=>setActiveTab("products")}>
         <button
           className={`admin-tab-btn ${activeTab === "products" ? "active" : ""}`}
           onClick={() => {
@@ -509,7 +530,7 @@ function Admin() {
       </div>
       
       {/* Product Table */}
-      {activeTab === "products" && (
+      {(activeTab === "products" )&& (
         <div>
           <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
             <button

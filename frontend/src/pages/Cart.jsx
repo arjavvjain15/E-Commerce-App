@@ -23,7 +23,7 @@ function Cart() {
       setShowCheckoutModal(false);
       setShippingAddress("");
     } catch (err) {
-      alert(err.response?.data?.message || "Checkout failed");
+      alert("Checkout failed");
     } finally {
       setIsCheckingOut(false);
     }
@@ -70,6 +70,7 @@ function Cart() {
             </div>
           ))}
         </div>
+
         <div className="cart-summary-card">
           <h2>Order Summary</h2>
           <div className="summary-row">
@@ -90,6 +91,7 @@ function Cart() {
           </div>
         </div>
       </div>
+
       {showCheckoutModal && (
         <div className="admin-form-modal">
           <div className="admin-modal-content" style={{ maxWidth: "500px" }}>
@@ -100,8 +102,8 @@ function Cart() {
                 <textarea
                   required
                   className="review-textarea"
-                  style={{ width: "100%", height: "100px", marginTop: "8px" }}
-                  placeholder="Enter your full shipping address (Street, City, Postal Code, etc.)"
+                  style={{ width: "100%", height: "200px", marginTop: "8px" }}
+                  placeholder="Enter your shipping address (Street, City, Postal Code, etc.)"
                   value={shippingAddress}
                   onChange={(e) => setShippingAddress(e.target.value)}
                 />
@@ -122,6 +124,8 @@ function Cart() {
                 >
                   {isCheckingOut ? "Processing..." : "Confirm Order"}
                 </button>
+                
+                
               </div>
             </form>
           </div>

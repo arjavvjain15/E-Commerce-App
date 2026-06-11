@@ -3,6 +3,9 @@ import { useTheme } from "../context/ThemeContext";
 import { useCart } from "../context/CartContext";
 import { useWishlist } from "../context/WishlistContext";
 import { useAuth } from "../context/AuthContext";
+import { IoMdMoon } from "react-icons/io";
+import { CiSun } from "react-icons/ci";
+
 
 function Navbar() {
   const { theme, toggleTheme } = useTheme();
@@ -107,7 +110,7 @@ function Navbar() {
           onClick={toggleTheme}
           title="Toggle Dark/Light Mode"
         >
-          {theme === "light" ? "Dark" : " Light"}
+          {theme === "light" ? <IoMdMoon></IoMdMoon> : <CiSun style={{color:"white", fontSize:"1.05rem"}}></CiSun>}
         </button>
       </div>
     </nav>

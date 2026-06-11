@@ -63,57 +63,6 @@ export const checkoutCart = async (userId, { shippingAddress }) => {
   }
 };
 
-export const createDraftOrder = async ({ userId, items, shippingAddress }) => {
-  const transaction = await sequelize.transaction();
-  try {
-    let totalAmount = 0;
-    const orderItemsToCreate = [];
-
-    for (const item of items) {
-      const product = await Product.findByPk(item.productId);
-      if (!product) {
-        const error = new Error(`Product not found: ${item.productId}`);
-        error.status = 404;
-        throw error;
-      }
-      totalAmount += Number(product.price) * item.quantity;
-      orderItemsToCreate.push({
-        productId: product.id,
-        quantity: item.quantity,
-        price: product.price,
-      });
-    }
-
-    const order = await Order.create(
-      {
-        userId,
-        status: "draft",
-        totalAmount,
-        shippingAddress,
-      },
-      { transaction }
-    );
-
-    for (const oi of orderItemsToCreate) {
-      await OrderItem.create(
-        {
-          orderId: order.id,
-          productId: oi.productId,
-          quantity: oi.quantity,
-          price: oi.price,
-        },
-        { transaction }
-      );
-    }
-
-    await transaction.commit();
-    return order;
-  } catch (error) {
-    await transaction.rollback();
-    throw error;
-  }
-};
-
 export const updateOrderStatus = async (orderId, status) => {
   const order = await Order.findByPk(orderId);
   if (!order) {
@@ -168,3 +117,16 @@ export const getAllOrders = async () => {
     include: [{ model: OrderItem, include: [Product] }],
   });
 };
+
+export const getall= async()=>{
+    return await Order.findAll({
+        include:[{model: OrderItem, include:[Product]}],
+    })
+}
+
+export const getbyId= async()=>{
+    return await Order.findAll({
+        include:[{model:OrderItem,include:[Product]}],
+    })
+}
+
