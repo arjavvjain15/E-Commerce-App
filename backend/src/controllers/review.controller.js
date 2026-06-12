@@ -1,4 +1,4 @@
-import { createProductReview, getReviewsForProduct } from "../services/review.service.js";
+import { createProductReview, getReviewsForProduct } from "../services/review.services.js";
 
 export const add = async (req, res, next) => {
   try {

@@ -21,7 +21,7 @@ function ProductCard({ product }) {
       <h3>{product.title}</h3>
       <p className="category">Category: {product.category}</p>
       <p className="price">Price: INR {product.price}</p>
-      <p className="rating">Rating:  {product.rating}</p>
+      <p className="rating">Rating: {product.rating}</p>
       
       <div className="actions">
         <Link to={`/product/${product.id}`} className="btn btn-secondary">

@@ -7,6 +7,7 @@ function Admin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
+
   const [showProductModal, setShowProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [productForm, setProductForm] = useState({
@@ -17,6 +18,27 @@ function Admin() {
     categoryName: "",
     imageUrl: "",
   });
+
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const [productFilter, setProductFilter] = useState("all");
+
+  const [banners, setBanners] = useState([]);
+  const [showBannerModal, setShowBannerModal] = useState(false);
+  const [editingBanner, setEditingBanner] = useState(null);
   const [bannerForm, setBannerForm] = useState({
     badge: "",
     title: "",
@@ -25,13 +47,6 @@ function Admin() {
     bg: "",
     categoryId: "",
   });
-  const [editingBanner,setEditingBanner]= useState(null);
-
-  const [showBannerModal,setShowBannerModal]= useState(false);
-
-  const [banners,setBanners]= useState([]);
-   
-  const [productFilter, setProductFilter] = useState("all");
 
   const [alertMessage, setAlertMessage] = useState({ type: "", text: "" });
 
@@ -60,6 +75,7 @@ function Admin() {
     }
   };
 
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -82,27 +98,8 @@ function Admin() {
     };
   }, [products, orders, users]);
 
-  // const recentBuyers = useMemo(() => {
-  //   const buyerMap = {};
-  //   orders.forEach((order) => {
-  //     if (order.status !== "cancelled" && order.status !== "draft") {
-  //       const uId = order.userId;
-  //       const buyerUser = users.find((u) => u.id === uId);
-  //       if (buyerUser) {
-  //         if (!buyerMap[uId]) {
-  //           buyerMap[uId] = {
-  //             id: uId,
-  //             name: buyerUser.name,
-  //             email: buyerUser.email,
-  //             totalSpent: 0,
-  //           };
-  //         }
-  //         buyerMap[uId].totalSpent += Number(order.totalAmount);
-  //       }
-  //     }
-  //   });
 
-  // aws
+  
   const filteredProducts = useMemo(() => {
     if (productFilter === "active") {
       return products.filter((p) => p.status === "active");
@@ -122,13 +119,27 @@ function Admin() {
     }
 
     try {
+      let finalImageUrl = productForm.imageUrl;
+
+      if (selectedFile) {
+        const formData = new FormData();
+        formData.append("image", selectedFile);
+
+        const uploadRes = await api.post("/upload", formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        });
+        finalImageUrl = uploadRes.data.imageUrl;
+      }
+
       const payload = {
         name: productForm.name,
         description: productForm.description,
         price: Number(productForm.price),
         stock: parseInt(productForm.stock, 10),
         categoryName: productForm.categoryName,
-        imageUrl: productForm.imageUrl || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
+        imageUrl: finalImageUrl || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
         status: status,
       };
 
@@ -141,6 +152,7 @@ function Admin() {
       }
       setShowProductModal(false);
       setEditingProduct(null);
+      //Reset form
       setProductForm({
         name: "",
         description: "",
@@ -149,6 +161,8 @@ function Admin() {
         categoryName: "",
         imageUrl: "",
       });
+      setSelectedFile(null);
+      setImagePreview("");
       fetchData();
     } catch (err) {
       console.error(err);
@@ -166,6 +180,8 @@ function Admin() {
       categoryName: prod.Category?.name || "",
       imageUrl: prod.imageUrl || "",
     });
+    setImagePreview(prod.imageUrl || "");
+    setSelectedFile(null);
     setShowProductModal(true);
   };
 
@@ -183,6 +199,7 @@ function Admin() {
 
   const handleBannerSubmit = async (e) => {
     if (e) e.preventDefault();
+
     try {
       const payload = {
         badge: bannerForm.badge,
@@ -230,18 +247,19 @@ function Admin() {
     setShowBannerModal(true);
   };
 
-  const handleDeleteBanner=async(bannerId)=>{
-    if(!window.confirm("Are you sure?")) return;
-    try{
+  const handleDeleteBanner = async (bannerId) => {
+    if (!window.confirm("Are you sure you want to delete this banner?")) return;
+    try {
       await api.delete(`/banners/${bannerId}`);
-      showAlert("success","Banner Deleted");
+      showAlert("success", "Banner deleted successfully!");
       fetchData();
-    }
-    catch(error){
-      console.log(error);
-      showAlert("danger","Failed to Delete");
+    } catch (err) {
+      console.error(err);
+      showAlert("danger", "Failed to delete banner.");
     }
   };
+
+
 
   const handleUpdateOrderStatus = async (orderId, newStatus) => {
     try {
@@ -278,7 +296,7 @@ function Admin() {
       <div className="admin-card-header">
         <h1 className="admin-dashboard-title">Admin Dashboard</h1>
         <div style={{ display: "flex", gap: "12px" }}>
-        <button
+          <button
             className="btn btn-secondary"
             onClick={() => {
               setEditingProduct(null);
@@ -290,135 +308,15 @@ function Admin() {
                 categoryName: "",
                 imageUrl: "",
               });
+              setSelectedFile(null);
+              setImagePreview("");
               setShowProductModal(true);
             }}
           >
-          Add Product
+            Add Product
           </button>
         </div>
       </div>
-
-      {showProductModal && (
-        <div className="admin-form-modal">
-          <div className="admin-modal-content">
-            <h3 className="admin-modal-title">
-              {editingProduct ? "Edit Product" : "Add New Product"}
-            </h3>
-            <form onSubmit={handleProductSubmit}>
-              <div style={{ marginBottom: "16px" }}>
-                <label className="review-form-label">Product Name</label>
-                <input
-                  type="text"
-                  required
-                  className="search-input"
-                  style={{ paddingLeft: "16px" }}
-                  placeholder="e.g. MacBook Pro M3"
-                  value={productForm.name}
-                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                />
-              </div>
-
-              <div style={{ marginBottom: "16px" }}>
-                <label className="review-form-label">Description</label>
-                <textarea
-                  required
-                  className="review-textarea"
-                  placeholder="Provide detailed description of the product."
-                  value={productForm.description}
-                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
-                <div>
-                  <label className="review-form-label">Price (INR)</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    required
-                    className="search-input"
-                    style={{ paddingLeft: "16px" }}
-                    placeholder="Enter Price"
-                    value={productForm.price}
-                    onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="review-form-label">Initial Stock</label>
-                  <input
-                    type="number"
-                    min="0"
-                    required
-                    className="search-input"
-                    style={{ paddingLeft: "16px" }}
-                    placeholder="Enter Stock"
-                    value={productForm.stock}
-                    onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: "16px" }}>
-                <label className="review-form-label">Category Name</label>
-                <select
-                  className="review-select"
-                  value={productForm.categoryName}
-                  onChange={(e) => setProductForm({ ...productForm, categoryName: e.target.value })}
-                  required
-                >
-                  <option value="">Select Category -</option>
-                  <option value="Laptop">Laptop</option>
-                  <option value="Mobile">Mobile</option>
-                  <option value="Audio">Audio</option>
-                  <option value="Accessories">Accessories</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div style={{ marginBottom: "24px" }}>
-                <label className="review-form-label">Image URL (Optional)</label>
-                <input
-                  type="text"
-                  className="search-input"
-                  style={{ paddingLeft: "16px" }}
-                  value={productForm.imageUrl}
-                  placeholder="Enter URL"
-                  onChange={(e) => setProductForm({ ...productForm, imageUrl: e.target.value })}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
-                <button
-                  type="button"
-                  className="btn btn-primary"
-                  style={{ flex: 1, minWidth: "120px" }}
-                  onClick={() => handleProductSubmit(null, "active")}
-                >
-                   Publish
-                </button>
-                
-                <button className="btn btn-secondary"
-                style={{flex: 1, minWidth: "120px", backgroundColor: "var(--accent-bg)", color: "var(--accent)"}}
-                onClick={()=>handleProductSubmit(null,"draft")}>
-                  Save as Draft
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary"
-                  style={{ flex: 1, minWidth: "80px" }}
-                  onClick={() => {
-                    setShowProductModal(false);
-                    setEditingProduct(null);
-                  }}
-                >
-                Cancel
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {alertMessage.text && (
         <div
@@ -428,7 +326,6 @@ function Admin() {
           {alertMessage.text}
         </div>
       )}
-
 
       <div className="admin-stats-grid">
         <div className="dashboard-stat-card blue">
@@ -448,7 +345,7 @@ function Admin() {
         <div className="dashboard-stat-card green">
           <div className="stat-card-content">
             <div>
-              <span className="stat-card-label">Active Users</span>
+              <span className="stat-card-label">Customers</span>
               <div className="stat-card-value">{stats.totalCustomers}</div>
             </div>
             <span style={{ fontSize: "2.5rem" }}></span>
@@ -482,25 +379,21 @@ function Admin() {
         <div className="dashboard-stat-card orange">
           <div className="stat-card-content">
             <div>
-              <span className="stat-card-label">Out of stock</span>
+              <span className="stat-card-label">Out of Stock</span>
               <div className="stat-card-value">{stats.outOfStock}</div>
             </div>
             <span style={{ fontSize: "2.5rem" }}></span>
           </div>
-          <button
-            className="stat-card-footer"
-            onClick={() => {
-              setActiveTab("products");
-            }}
-          >
+          <button className="stat-card-footer" onClick={() => setActiveTab("products")}>
             <span>View All</span>
             <span>→</span>
           </button>
         </div>
-
       </div>
 
-      <div className="admin-tabs" onLoad={()=>setActiveTab("products")}>
+
+
+      <div className="admin-tabs">
         <button
           className={`admin-tab-btn ${activeTab === "products" ? "active" : ""}`}
           onClick={() => {
@@ -508,29 +401,30 @@ function Admin() {
             setProductFilter("all");
           }}
         >
-        Products
+          Products
         </button>
         <button
           className={`admin-tab-btn ${activeTab === "orders" ? "active" : ""}`}
           onClick={() => setActiveTab("orders")}
         >
-        Orders
+          Orders
         </button>
         <button
           className={`admin-tab-btn ${activeTab === "customers" ? "active" : ""}`}
           onClick={() => setActiveTab("customers")}
         >
-        Customers
+          Customers
         </button>
-
-        <button className={`admin-tab-btn ${activeTab === "banners" ? "active" : ""}`}
-        onClick={()=>setActiveTab("banners")}>
-        Banners
+        <button
+          className={`admin-tab-btn ${activeTab === "banners" ? "active" : ""}`}
+          onClick={() => setActiveTab("banners")}
+        >
+          Banners
         </button>
       </div>
-      
-      {/* Product Table */}
-      {(activeTab === "products" )&& (
+
+
+      {activeTab === "products" && (
         <div>
           <div style={{ display: "flex", gap: "10px", marginBottom: "16px" }}>
             <button
@@ -538,21 +432,21 @@ function Admin() {
               style={{ padding: "6px 12px", fontSize: "0.85rem" }}
               onClick={() => setProductFilter("all")}
             >
-              All Products
+              All Products ({products.length})
             </button>
             <button
               className={`btn ${productFilter === "active" ? "btn-primary" : "btn-secondary"}`}
               style={{ padding: "6px 12px", fontSize: "0.85rem" }}
               onClick={() => setProductFilter("active")}
             >
-              Active 
+              Active ({products.filter((p) => p.status === "active").length})
             </button>
             <button
               className={`btn ${productFilter === "draft" ? "btn-primary" : "btn-secondary"}`}
               style={{ padding: "6px 12px", fontSize: "0.85rem" }}
               onClick={() => setProductFilter("draft")}
             >
-              Drafts
+              Drafts ({products.filter((p) => p.status === "draft").length})
             </button>
           </div>
 
@@ -612,11 +506,11 @@ function Admin() {
                               }
                             }}
                           >
-                             Publish
+                            Publish
                           </button>
                         )}
                         <button className="btn btn-secondary" style={{ padding: "6px 10px", fontSize: "0.8rem" }} onClick={() => handleEditProduct(prod)}>
-                           Edit
+                          Edit
                         </button>
                         <button className="btn btn-secondary" style={{ padding: "6px 10px", fontSize: "0.8rem", color: "var(--danger)" }} onClick={() => handleDeleteProduct(prod.id)}>
                            Delete
@@ -631,15 +525,14 @@ function Admin() {
         </div>
       )}
 
-
-      {/* Order Table */}
+      {/* Orders Tab */}
       {activeTab === "orders" && (
         <div className="admin-table-container">
           <table className="admin-table">
             <thead>
               <tr>
                 <th>Order ID</th>
-                <th>Customer id</th>
+                <th>Buyer User</th>
                 <th>Items Placed</th>
                 <th>Total Amount</th>
                 <th>Status</th>
@@ -662,7 +555,7 @@ function Admin() {
                       <ul style={{ paddingLeft: "16px", margin: 0, fontSize: "0.85rem" }}>
                         {ord.OrderItems?.map((item) => (
                           <li key={item.id}>
-                            {item.Product?.name} (Qty:{item.quantity})
+                            {item.Product?.name} (Qty: {item.quantity})
                           </li>
                         ))}
                       </ul>
@@ -707,8 +600,7 @@ function Admin() {
         </div>
       )}
 
-
-      {/* Customers Table */}
+      {/* Customers Tab */}
       {activeTab === "customers" && (
         <div className="admin-table-container">
           <table className="admin-table">
@@ -716,34 +608,38 @@ function Admin() {
               <tr>
                 <th>User ID</th>
                 <th>Name</th>
-                <th>Email</th>
+                <th>Email Address</th>
+                <th>Provider</th>
                 <th>Role</th>
               </tr>
             </thead>
             <tbody>
-                {users.map((u) => (
-                  <tr key={u.id}>
-                    <td style={{ fontWeight: "700" }}>{u.id}</td>
-                    <td style={{ fontWeight: "600", color: "var(--text-h)" }}>{u.name}</td>
-                    <td>{u.email}</td>
-                    <td>
-                      <span className={`badge-status ${u.role === "admin" ? "pending" : "draft"}`}>
-                        {u.role}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+              {users.map((u) => (
+                <tr key={u.id}>
+                  <td style={{ fontWeight: "700" }}>{u.id}</td>
+                  <td style={{ fontWeight: "600", color: "var(--text-h)" }}>{u.name}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    <span className="badge-status completed" style={{ backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}>
+                      {u.provider}
+                    </span>
+                  </td>
+                  <td>
+                    <span className={`badge-status ${u.role === "admin" ? "pending" : "draft"}`}>
+                      {u.role}
+                    </span>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>
       )}
 
-
-      {/* Banners */}
       {activeTab === "banners" && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
-            <h3 style={{ margin: 0, color: "var(--text-h)" }}>Banner Advertisements</h3>
+            <h3 style={{ margin: 0, color: "var(--text-h)" }}>Banner Advertisements ({banners.length})</h3>
             <button
               className="btn btn-primary"
               onClick={() => {
@@ -770,7 +666,7 @@ function Admin() {
                   <th>Image Preview</th>
                   <th>Title / Subtitle</th>
                   <th>Badge</th>
-                  <th>Category</th>
+                  <th>Target Category</th>
                   <th>Background</th>
                   <th>Actions</th>
                 </tr>
@@ -800,7 +696,7 @@ function Admin() {
                         {b.badge ? <span className="badge-status completed" style={{ fontSize: "0.7rem" }}>{b.badge}</span> : <span style={{ color: "var(--text)", fontStyle: "italic" }}>None</span>}
                       </td>
                       <td style={{ fontWeight: "500" }}>
-                        {b.Category?.name || "None"}
+                        {b.Category?.name || "None (General Banner)"}
                       </td>
                       <td style={{ fontSize: "0.8rem", fontFamily: "monospace", maxWidth: "150px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }} title={b.bg}>
                         <div style={{ display: "inline-block", width: "16px", height: "16px", borderRadius: "4px", background: b.bg || "#1e3a8a", marginRight: "6px", verticalAlign: "middle", border: "1px solid var(--border)" }} />
@@ -813,14 +709,14 @@ function Admin() {
                             style={{ padding: "6px 10px", fontSize: "0.8rem" }}
                             onClick={() => handleEditBanner(b)}
                           >
-                          Edit
+                            Edit
                           </button>
                           <button
                             className="btn btn-secondary"
                             style={{ padding: "6px 10px", fontSize: "0.8rem", color: "var(--danger)" }}
                             onClick={() => handleDeleteBanner(b.id)}
                           >
-                          Delete
+                            Delete
                           </button>
                         </div>
                       </td>
@@ -833,7 +729,169 @@ function Admin() {
         </div>
       )}
 
-      {/* Banner Edit / Add Modal */}
+
+      {showProductModal && (
+        <div className="admin-form-modal">
+          <div className="admin-modal-content">
+            <h3 className="admin-modal-title">
+              {editingProduct ? " Edit Product" : " Add New Product"}
+            </h3>
+            <form onSubmit={handleProductSubmit}>
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Product Name</label>
+                <input
+                  type="text"
+                  required
+                  className="search-input"
+                  style={{ paddingLeft: "16px" }}
+                  placeholder="e.g. MacBook Pro M3"
+                  value={productForm.name}
+                  onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                />
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Description</label>
+                <textarea
+                  required
+                  className="review-textarea"
+                  placeholder="Detailed description of the product..."
+                  value={productForm.description}
+                  onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                />
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "16px" }}>
+                <div>
+                  <label className="review-form-label">Price (INR)</label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    required
+                    className="search-input"
+                    style={{ paddingLeft: "16px" }}
+                    placeholder="999.99"
+                    value={productForm.price}
+                    onChange={(e) => setProductForm({ ...productForm, price: e.target.value })}
+                  />
+                </div>
+                <div>
+                  <label className="review-form-label">Initial Stock</label>
+                  <input
+                    type="number"
+                    min="0"
+                    required
+                    className="search-input"
+                    style={{ paddingLeft: "16px" }}
+                    placeholder="50"
+                    value={productForm.stock}
+                    onChange={(e) => setProductForm({ ...productForm, stock: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div style={{ marginBottom: "16px" }}>
+                <label className="review-form-label">Category Name</label>
+                <select
+                  className="review-select"
+                  value={productForm.categoryName}
+                  onChange={(e) => setProductForm({ ...productForm, categoryName: e.target.value })}
+                  required
+                >
+                  <option value="">-- Select Category --</option>
+                  <option value="Laptop">Laptop</option>
+                  <option value="Mobile">Mobile</option>
+                  <option value="Audio">Audio</option>
+                  <option value="Accessories">Accessories</option>
+                </select>
+              </div>
+
+              <div style={{ marginBottom: "24px" }}>
+                <label className="review-form-label">Product Image</label>
+                <div className="image-input-container" style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "16px", background: "var(--card-bg)" }}>
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "2px dashed var(--border)",
+                        borderRadius: "8px",
+                        padding: "24px",
+                        cursor: "pointer",
+                        textAlign: "center"
+                      }}
+                      onClick={() => document.getElementById("product-image-file").click()}
+                    >
+                      <input
+                        type="file"
+                        id="product-image-file"
+                        accept="image/*"
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                      />
+                      <span style={{ fontSize: "2rem", marginBottom: "8px" }}></span>
+                      <span style={{ fontSize: "0.7rem", color: "var(--text)" }}>Click to select an image file</span>
+                      {selectedFile && (
+                        <span style={{ fontSize: "0.8rem", color: "var(--success)", marginTop: "4px", wordBreak: "break-all" }}>
+                          Selected: {selectedFile.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {imagePreview && (
+                    <div style={{ marginTop: "16px", textAlign: "center" }}>
+                      <p style={{ fontSize: "0.8rem", color: "var(--text)", marginBottom: "8px" }}>Image Preview</p>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{ maxWidth: "100%", maxHeight: "150px", objectFit: "contain", borderRadius: "8px", border: "1px solid var(--border)" }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  style={{ flex: 1, minWidth: "120px" }}
+                  onClick={() => handleProductSubmit(null, "active")}
+                >
+                  Publish
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1, minWidth: "120px", backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}
+                  onClick={() => handleProductSubmit(null, "draft")}
+                >
+                   Save as Draft
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ flex: 1, minWidth: "80px" }}
+                  onClick={() => {
+                    setShowProductModal(false);
+                    setEditingProduct(null);
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       {showBannerModal && (
         <div className="admin-form-modal">
           <div className="admin-modal-content" style={{ maxWidth: "550px" }}>
@@ -938,8 +996,6 @@ function Admin() {
           </div>
         </div>
       )}
-
-      
 
 
     </div>

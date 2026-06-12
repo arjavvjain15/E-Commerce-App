@@ -1,12 +1,12 @@
 import { Router } from "express";
-import { createBanner, deleteBanner, getAllBanners, updateBanner } from "../services/banner.services";
-import authMiddleware from "../middleware/auth.middleware";
-import roleMiddleware from "../middleware/role.middleware";
+import { getAll, create, update, remove } from "../controllers/banner.controller.js";
+import authMiddleware from "../middleware/auth.middleware.js";
+import roleMiddleware from "../middleware/role.middleware.js";
 const router=Router();
 
-router.get("/",getAllBanners);
-router.post("/",authMiddleware,roleMiddleware["admin"],createBanner);
-router.put("/:id",authMiddleware,roleMiddleware["admin"],updateBanner);
-router.delete("/:id",authMiddleware,roleMiddleware["admin"],deleteBanner);
+router.get("/",getAll);
+router.post("/",authMiddleware,roleMiddleware(["admin"]),create);
+router.put("/:id",authMiddleware,roleMiddleware(["admin"]),update);
+router.delete("/:id",authMiddleware,roleMiddleware(["admin"]),remove);
 
 export default router;

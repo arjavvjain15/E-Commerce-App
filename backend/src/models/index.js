@@ -10,6 +10,7 @@ import WishlistItem from "./wishlistItem.model.js";
 import Order from "./order.model.js";
 import OrderItem from "./orderItem.model.js";
 import Review from "./review.model.js";
+import Banner from "./banner.model.js";
 
 
 // User and Session 
@@ -31,6 +32,11 @@ Order.belongsTo(User, { foreignKey: "userId" });
 // Category and Product 
 Category.hasMany(Product, { foreignKey: "categoryId", onDelete: "SET NULL" });
 Product.belongsTo(Category, { foreignKey: "categoryId" });
+
+// Category and Banner
+Category.hasMany(Banner, { foreignKey: "categoryId", onDelete: "SET NULL" });
+Banner.belongsTo(Category, { foreignKey: "categoryId" });
+
 
 // Cart and CartItem 
 Cart.hasMany(CartItem, { foreignKey: "cartId", onDelete: "CASCADE" });
@@ -64,4 +70,4 @@ Review.belongsTo(User, { foreignKey: "userId" });
 Product.hasMany(Review, { foreignKey: "productId", onDelete: "CASCADE" });
 Review.belongsTo(Product, { foreignKey: "productId" });
 
-export {sequelize,User,Session,Category,Product,Cart,CartItem,Wishlist,WishlistItem,Order,OrderItem,Review,};
+export {sequelize,User,Session,Category,Product,Cart,CartItem,Wishlist,WishlistItem,Order,OrderItem,Review,Banner};

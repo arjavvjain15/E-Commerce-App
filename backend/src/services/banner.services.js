@@ -1,4 +1,4 @@
-import {Banner,Category} from "../models/index.model";
+import {Banner,Category} from "../models/index.js";
 
 export const getAllBanners=async()=>{
     return await Banner.findAll({include:[{model:Category,attributes:["id","name"]}]});

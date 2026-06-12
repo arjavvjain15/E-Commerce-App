@@ -1,5 +1,5 @@
-import { fetchAllUsers } from "../services/admin.service.js";
-import { getAllOrders, updateOrderStatus } from "../services/order.service.js";
+import { fetchAllUsers } from "../services/admin.services.js";
+import { getAllOrders, updateOrderStatus } from "../services/order.services.js";
 
 export const getUsers = async (req, res, next) => {
   try {

@@ -1,6 +1,6 @@
 import { Router } from "express";
-import authMiddleware from "../middleware/auth.middleware";
-import { addToWishlist, removeFromWishlist, viewWishlist } from "../controllers/wishlist.controller";
+import authMiddleware from "../middleware/auth.middleware.js";
+import { addToWishlist, removeFromWishlist, viewWishlist } from "../controllers/wishlist.controller.js";
 
 const router=Router();
 

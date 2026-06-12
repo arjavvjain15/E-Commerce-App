@@ -4,7 +4,7 @@ import {
     createProduct,
     updateProduct,
     deleteProduct,
-  } from "../services/product.service.js";
+  } from "../services/product.services.js";
   import jwt from "jsonwebtoken";
   import { User } from "../models/index.js";
   

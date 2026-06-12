@@ -1,4 +1,4 @@
-import { getAllBanners,createBanner,updateBanner,deleteBanner} from "../services/banner.services";
+import { getAllBanners,createBanner,updateBanner,deleteBanner} from "../services/banner.services.js";
 
 export const getAll=async(req,res,next)=>{
     try{
@@ -13,8 +13,8 @@ export const getAll=async(req,res,next)=>{
 export const create=async(req,res,next)=>{
     try{
         const {badge,title,subtitle,bg,imageUrl,categoryId}=req.body;
-        if(!title) res.status(400).json({message:"Title is Mandatory"});
-        const banner=await createBanner(badge,title,subtitle,bg,imageUrl,categoryId);
+        if(!title) return res.status(400).json({message:"Title is Mandatory"});
+        const banner=await createBanner({badge,title,subtitle,bg,imageUrl,categoryId});
         res.status(201).json(banner);
     }catch(error){
         next(error);

@@ -1,4 +1,4 @@
-import { Wishlist, WishlistItem, Product } from "../models/index.js";
+import { Wishlist, WishlistItem, Product, Category } from "../models/index.js";
 
 export const getWishlistDetails = async (userId) => {
   let wishlist = await Wishlist.findOne({
@@ -6,7 +6,10 @@ export const getWishlistDetails = async (userId) => {
     include: [
       {
         model: WishlistItem,
-        include: [{ model: Product }],
+        include: [{
+          model: Product,
+          include: [{ model: Category, attributes: ["id", "name"] }]
+        }],
       },
     ],
   });
@@ -18,7 +21,10 @@ export const getWishlistDetails = async (userId) => {
       include: [
         {
           model: WishlistItem,
-          include: [{ model: Product }],
+          include: [{
+            model: Product,
+            include: [{ model: Category, attributes: ["id", "name"] }]
+          }],
         },
       ],
     });
@@ -43,7 +49,7 @@ export const addItemToWishlist= async(userId,productId)=>{
     });
     if(exists) return exists;
 
-    return await Wishlist.create({wishlistId: wishlist.id, productId});
+    return await WishlistItem.create({wishlistId: wishlist.id, productId});
 }
 
 

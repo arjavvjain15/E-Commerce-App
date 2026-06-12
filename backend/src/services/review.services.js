@@ -1,4 +1,4 @@
-import { User, Review, Product } from "../models";
+import { User, Review, Product } from "../models/index.js";
 
 export const createProductReview= async({userId,productId,rating,comment})=>{
     const product = await Product.findByPk(productId);

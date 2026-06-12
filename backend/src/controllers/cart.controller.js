@@ -3,7 +3,7 @@ import {
     addItemToCart,
     removeItemFromCart,
     updateCartItemQuantity,
-  } from "../services/cart.service.js";
+  } from "../services/cart.services.js";
   
   export const viewCart = async (req, res, next) => {
     try {

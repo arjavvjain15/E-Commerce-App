@@ -1,6 +1,7 @@
 import { Router } from "express";
-import { login,register,me,googleOAuth,googleOAuthCallback,refresh,logout} from "../controllers/auth.controller";
-import authMiddleware from "../middleware/auth.middleware";
+
+import authMiddleware from "../middleware/auth.middleware.js";
+import { googleOAuth, googleOAuthCallback, login, logout, me, refresh, register } from "../controllers/auth.controller.js";
 
 const router=Router();
 

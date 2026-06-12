@@ -1,21 +1,11 @@
-import express from "express";
-import dotenv from "dotenv";
-import pool from "./src/config/db.js";
-
-
-dotenv.config();
-
-const app = express();
-
-app.use(express.json());
+import "dotenv/config";
+import app from "./src/app.js";
+import sequelize from "./src/config/db.js";
 
 async function connectDB() {
   try {
-    const connection = await pool.getConnection();
-
+    await sequelize.authenticate();
     console.log("MySQL Connected");
-
-    connection.release();
   } catch (error) {
     console.error("Database Connection Failed");
     console.error(error.message);

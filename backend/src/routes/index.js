@@ -6,6 +6,7 @@ import wishlistRoutes from "./wishlist.routes.js";
 import orderRoutes from "./order.routes.js";
 import adminRoutes from "./admin.routes.js";
 import bannerRoutes from "./banner.routes.js";
+import uploadRoutes from "./upload.routes.js";
 
 const router = Router();
 
@@ -16,5 +17,7 @@ router.use("/wishlist", wishlistRoutes);
 router.use("/orders", orderRoutes);
 router.use("/admin", adminRoutes);
 router.use("/banners",bannerRoutes);
+router.use("/upload", uploadRoutes);
+
 
 export default router;
