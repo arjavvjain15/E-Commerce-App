@@ -39,6 +39,7 @@ function Admin() {
   const [banners, setBanners] = useState([]);
   const [showBannerModal, setShowBannerModal] = useState(false);
   const [editingBanner, setEditingBanner] = useState(null);
+
   const [bannerForm, setBannerForm] = useState({
     badge: "",
     title: "",
@@ -110,15 +111,16 @@ function Admin() {
     return products;
   }, [products, productFilter]);
 
+
   const handleProductSubmit = async (e, status = "active") => {
     if (e) e.preventDefault();
 
-    if (!productForm.name || !productForm.description || !productForm.price || productForm.stock === "" || !productForm.categoryName) {
-      showAlert("danger", "Product Name, Description, Price, Stock, and Category are required.");
+    if (!productForm.name) {
+      showAlert("danger", "Product name is required.");
       return;
     }
 
-    try {
+    try{
       let finalImageUrl = productForm.imageUrl;
 
       if (selectedFile) {
@@ -164,7 +166,8 @@ function Admin() {
       setSelectedFile(null);
       setImagePreview("");
       fetchData();
-    } catch (err) {
+    }
+    catch (err) {
       console.error(err);
       showAlert("danger", err.response?.data?.message || "Failed to save product.");
     }
@@ -184,6 +187,7 @@ function Admin() {
     setSelectedFile(null);
     setShowProductModal(true);
   };
+
 
   const handleDeleteProduct = async (prodId) => {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
@@ -832,6 +836,12 @@ function Admin() {
                         style={{ display: "none" }}
                         onChange={handleFileChange}
                       />
+                      <button
+                      type="submit"
+                      style={{}}
+                      >
+
+                      </button>
                       <span style={{ fontSize: "2rem", marginBottom: "8px" }}></span>
                       <span style={{ fontSize: "0.7rem", color: "var(--text)" }}>Click to select an image file</span>
                       {selectedFile && (
