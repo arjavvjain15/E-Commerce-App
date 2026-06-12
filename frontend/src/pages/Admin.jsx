@@ -851,7 +851,7 @@ function Admin() {
                       )}
                     </div>
                   </div>
-
+                  
                   {imagePreview && (
                     <div style={{ marginTop: "16px", textAlign: "center" }}>
                       <p style={{ fontSize: "0.8rem", color: "var(--text)", marginBottom: "8px" }}>Image Preview</p>
