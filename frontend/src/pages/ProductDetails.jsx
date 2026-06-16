@@ -41,7 +41,6 @@ function ProductDetails() {
       setLoading(false);
     }
   };
-
   const fetchReviews = async () => {
     try {
       const res = await api.get(`/products/${id}/reviews`);
@@ -157,6 +156,9 @@ function ProductDetails() {
             >
               {isInWishlist ? "Wishlist" : "Add to Wishlist"}
             </button>
+            <a className="btn btn-secondary btn-large" href={`http://localhost:3000/api/products/${product.id}/download`}>
+            Download Image
+            </a>
           </div>
         </div>
       </div>

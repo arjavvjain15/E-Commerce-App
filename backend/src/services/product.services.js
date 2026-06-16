@@ -36,6 +36,7 @@ export const createProduct = async ({
   price,
   stock,
   imageUrl,
+  originalName,
   categoryName,
   categoryId,
   status,
@@ -52,6 +53,7 @@ export const createProduct = async ({
     price,
     stock,
     imageUrl,
+    originalName,
     categoryId: finalCategoryId || null,
     status: status || "active",
   });
@@ -59,7 +61,7 @@ export const createProduct = async ({
 
 export const updateProduct = async (
   id,
-  { name, description, price, stock, imageUrl, categoryName, categoryId, status }
+  { name, description, price, stock, imageUrl, originalName, categoryName, categoryId, status }
 ) => {
   const product = await Product.findByPk(id);
   if (!product) {
@@ -80,6 +82,7 @@ export const updateProduct = async (
     price: price !== undefined ? price : product.price,
     stock: stock !== undefined ? stock : product.stock,
     imageUrl: imageUrl !== undefined ? imageUrl : product.imageUrl,
+    originalName: originalName !== undefined ? originalName : product.originalName,
     categoryId: finalCategoryId !== undefined ? finalCategoryId : product.categoryId,
     status: status !== undefined ? status : product.status,
   });
@@ -97,3 +100,4 @@ export const deleteProduct = async (id) => {
   await product.destroy();
   return true;
 };
+

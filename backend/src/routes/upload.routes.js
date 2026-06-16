@@ -7,6 +7,6 @@ import multer from "multer";
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage() });
 
-router.post("/uploads",authMiddleware,roleMiddleware([("admin")]),upload.single("image"),uploadImage);
+router.post("/",authMiddleware,roleMiddleware([("admin")]),upload.single("image"),uploadImage);
 
 export default router;

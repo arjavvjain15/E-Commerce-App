@@ -17,6 +17,7 @@ function Admin() {
     stock: "",
     categoryName: "",
     imageUrl: "",
+    originalName: "",
   });
 
   const [selectedFile, setSelectedFile] = useState(null);
@@ -122,6 +123,7 @@ function Admin() {
 
     try{
       let finalImageUrl = productForm.imageUrl;
+      let finalOriginalName = productForm.originalName;
 
       if (selectedFile) {
         const formData = new FormData();
@@ -133,6 +135,7 @@ function Admin() {
           },
         });
         finalImageUrl = uploadRes.data.imageUrl;
+        finalOriginalName = uploadRes.data.originalName || selectedFile.name;
       }
 
       const payload = {
@@ -142,6 +145,7 @@ function Admin() {
         stock: parseInt(productForm.stock, 10),
         categoryName: productForm.categoryName,
         imageUrl: finalImageUrl || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
+        originalName: finalOriginalName,
         status: status,
       };
 
@@ -162,6 +166,7 @@ function Admin() {
         stock: "",
         categoryName: "",
         imageUrl: "",
+        originalName: "",
       });
       setSelectedFile(null);
       setImagePreview("");
@@ -182,6 +187,7 @@ function Admin() {
       stock: prod.stock,
       categoryName: prod.Category?.name || "",
       imageUrl: prod.imageUrl || "",
+      originalName: prod.originalName || "",
     });
     setImagePreview(prod.imageUrl || "");
     setSelectedFile(null);
@@ -311,6 +317,7 @@ function Admin() {
                 stock: "",
                 categoryName: "",
                 imageUrl: "",
+                originalName: "",
               });
               setSelectedFile(null);
               setImagePreview("");

@@ -12,7 +12,8 @@ export const uploadToS3 = async (file) => {
   });
 
   const fileExtension = path.extname(file.originalname);
-  const key = `${uuidv4()}${fileExtension}`;            //still change needed, such that i want to download a file how will i know as id is unique, i want to download the file by specific name
+  //in db save both original name and s3 key
+  const key = `${uuidv4()}${fileExtension}`;            
 
   const command=new PutObjectCommand({
     Bucket: process.env.AWS_S3_BUCKET,
@@ -20,6 +21,7 @@ export const uploadToS3 = async (file) => {
     Body: file.buffer,
     ContentType: file.mimetype,
   });
+
   await s3.send(command);
 
   return `https://${process.env.AWS_S3_BUCKET}.s3.${process.env.AWS_REGION}.amazonaws.com/${key}`;
