@@ -89,9 +89,6 @@ const BannerCarousel = ({ banners, initialSlide = 0 }) => {
   const prevSlide = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
-  const nextToNext=()=>{
-    setCurrentSlide((prev)=>(prev+1+1)%banners.length);
-  }
 
   return (
     <div
@@ -192,22 +189,17 @@ function Home() {
     );
   };
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.title.toLowerCase().includes(search.toLowerCase()) ||
-        product.description.toLowerCase().includes(search.toLowerCase());
+  const filteredProducts= useMemo(()=>{
+    return products.filter((product)=>{
+      const matchesSearch=
+      product.title.toLowerCase().includes(search.toLowerCase()) ||
+      product.description.toLowerCase().includes(search.toLowerCase());
 
-      const matchesCategory =
-        selectedCategories.length === 0 ? true : selectedCategories.includes(product.category);
+      const matchesCategory= selectedCategories.length===0? true:selectedCategories.includes(product.category);
 
-      return matchesSearch && matchesCategory;
+      return matchesSearch&& matchesCategory;
     });
-  }, [products, search, selectedCategories]);
-
-  const dealsProducts = useMemo(() => {
-    return products.slice(0, 6);
-  }, [products]);
+  }, [products,search,selectedCategories]);
 
 
   if (loading) {
@@ -250,7 +242,7 @@ function Home() {
           >
             All
           </button>
-          {["Laptop", "Mobile", "Audio", "Accessories"].map((cat) => {
+          {["Laptop", "Mobile", "Audio", "Accessories","Others"].map((cat) => {
             const isSelected = selectedCategories.includes(cat);
             return (
               <button
@@ -259,7 +251,7 @@ function Home() {
                 onClick={() => toggleCategory(cat)}
                 style={{ borderRadius: "20px", padding: "8px 16px" }}
               >
-                {cat}s
+              {cat}
               </button>
             );
           })}

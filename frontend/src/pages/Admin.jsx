@@ -109,6 +109,9 @@ function Admin() {
     if (productFilter === "draft") {
       return products.filter((p) => p.status === "draft");
     }
+    if(productFilter==="outOfStock"){
+      return products.filter((p)=>p.stock ===0);
+    }
     return products;
   }, [products, productFilter]);
 
@@ -238,7 +241,8 @@ function Admin() {
         categoryId: "",
       });
       fetchData();
-    } catch (err) {
+    }
+    catch (err) {
       console.error(err);
       showAlert("danger", err.response?.data?.message || "Failed to save banner.");
     }
@@ -395,7 +399,10 @@ function Admin() {
             </div>
             <span style={{ fontSize: "2.5rem" }}></span>
           </div>
-          <button className="stat-card-footer" onClick={() => setActiveTab("products")}>
+          <button className="stat-card-footer" onClick={() => 
+          {setActiveTab("products");
+          setProductFilter("outOfStock");
+          }}>
             <span>View All</span>
             <span>→</span>
           </button>
@@ -443,21 +450,28 @@ function Admin() {
               style={{ padding: "6px 12px", fontSize: "0.85rem" }}
               onClick={() => setProductFilter("all")}
             >
-              All Products ({products.length})
+              All Products 
             </button>
             <button
               className={`btn ${productFilter === "active" ? "btn-primary" : "btn-secondary"}`}
               style={{ padding: "6px 12px", fontSize: "0.85rem" }}
               onClick={() => setProductFilter("active")}
             >
-              Active ({products.filter((p) => p.status === "active").length})
+              Active 
             </button>
             <button
               className={`btn ${productFilter === "draft" ? "btn-primary" : "btn-secondary"}`}
               style={{ padding: "6px 12px", fontSize: "0.85rem" }}
               onClick={() => setProductFilter("draft")}
             >
-              Drafts ({products.filter((p) => p.status === "draft").length})
+              Drafts 
+            </button>
+            <button
+            className={`btn ${productFilter === "outOfStock" ? "btn-primary" : "btn-secondary"}`}
+            style={{ padding: "6px 12px", fontSize: "0.85rem" }}
+            onClick={() => setProductFilter("outOfStock")}
+            >
+              Out of Stock 
             </button>
           </div>
 
