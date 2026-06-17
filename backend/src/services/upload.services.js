@@ -59,6 +59,7 @@ export const startMultipartUpload= async(fileName,contentType)=>{
 
 export const uploadPart= async(uploadId,key, partNumber,buffer)=>{
     const {s3,bucket}= getS3ClientAndConfig();
+
     const command= new UploadPartCommand({
         Bucket: bucket,
         Key: key,
@@ -72,9 +73,9 @@ export const uploadPart= async(uploadId,key, partNumber,buffer)=>{
     return {ETag: response.ETag, PartNumber: Number(partNumber)};
 };
 
-export const completeMultipartUpload= async(uploadid,key)=>{
+export const completeMultipartUpload= async(uploadId,key,parts)=>{
     const {s3,bucket,region}=getS3ClientAndConfig();
-    
+
     const list = parts.map((p) => ({
       PartNumber: Number(p.PartNumber||p.partNumber),
       ETag: p.ETag,
@@ -83,7 +84,7 @@ export const completeMultipartUpload= async(uploadid,key)=>{
     const command= CompleteMultipartUploadCommand({
         Bucket: bucket,
         Key: key,
-        UploadId: uploadid,
+        UploadId: uploadId,
         MultipartUpload:{
             Parts: list,
         }

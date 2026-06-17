@@ -1,10 +1,4 @@
-import { 
-  uploadToS3, 
-  startMultipartUpload, 
-  uploadPart, 
-  completeMultipartUpload, 
-  abortMultipartUpload 
-} from "../services/upload.services.js";
+import {abortMultipartUpload, completeMultipartUpload, startMultipartUpload, uploadPart, uploadToS3} from "../services/upload.services.js";
 
 export const uploadImage = async (req, res, next) => {
   try {
@@ -16,59 +10,51 @@ export const uploadImage = async (req, res, next) => {
   }
 };
 
-export const startMultipart = async (req, res, next) => {
-  try {
-    const { fileName, contentType } = req.body;
-    if (!fileName || !contentType) {
-      return res.status(400).json({ message: "fileName and contentType are required" });
+export const startMultipart= async(req,res,next)=>{
+    try{
+        const {fileName,contentType}= req.body;
+        if(!fileName) return res.status(400).json({message:"FileName is Mandatory"});
+        const result= await startMultipartUpload(fileName,contentType);
+        res.status(200).json(result);
     }
-    const result = await startMultipartUpload(fileName, contentType);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
+    catch(error){
+        next(error);
+    }
 };
 
-export const uploadPartHandler = async (req, res, next) => {
-  try {
-    const { uploadId, key, partNumber } = req.body;
-    if (!uploadId || !key || !partNumber) {
-      return res.status(400).json({ message: "uploadId, key, and partNumber are required" });
+export const uploadPartHandler= async(req,res,next)=>{
+    try{
+        const {uploadId,key,partNumber}= req.body;
+        if(!uploadId|| !key||!partNumber) return res.status(400).json({messgae:"These fields are mandatory"});
+        if(!req.file) return res.status(400).json({messgae:"Chunk is missing"});
+        const result= await uploadPart(uploadId,key,partNumber,req.file.buffer);
+        res.status(200).json(result);
     }
-    if (!req.file) {
-      return res.status(400).json({ message: "No chunk file found" });
+    catch(error){
+        next(error);
     }
-    const result = await uploadPart(uploadId, key, partNumber, req.file.buffer);
-    res.status(200).json(result);
-  } catch (error) {
-    next(error);
-  }
 };
 
-export const completeMultipart = async (req, res, next) => {
-  try {
-    const { uploadId, key, parts } = req.body;
-    if (!uploadId || !key || !parts || !Array.isArray(parts)) {
-      return res.status(400).json({ message: "uploadId, key, and parts array are required" });
+export const completeMultipart= async(req,res,next)=>{
+    try{
+        const {uploadId,key,parts}= req.body;
+        if(!uploadId|| !key|| !parts) return res.status(400).json({message:"These fields are mandatory"});
+        const imageUrl= await completeMultipartUpload(uploadId,key,parts);
+        res.status(200).json({imageUrl});
     }
-    const imageUrl = await completeMultipartUpload(uploadId, key, parts);
-    res.status(200).json({ imageUrl });
-  } catch (error) {
-    next(error);
-  }
+    catch(error){
+        next(error);
+    }
 };
 
-export const abortMultipart = async (req, res, next) => {
-  try {
-    const uploadId = req.body.uploadId || req.query.uploadId;
-    const key = req.body.key || req.query.key;
-
-    if (!uploadId || !key) {
-      return res.status(400).json({ message: "uploadId and key are required" });
+export const abortMultipart= async(req,res,next)=>{
+    try{
+        const {uploadId,key}= req.body;
+        if(!uploadId||!key) return res.status(400).json({message:"UploadId and Key are required"});
+        await abortMultipartUpload(uploadId,key);
+        res.status(200).json({message:"Multipart upload aborted"});
     }
-    await abortMultipartUpload(uploadId, key);
-    res.status(200).json({ message: "Multipart upload aborted successfully" });
-  } catch (error) {
-    next(error);
-  }
+    catch(error){
+        next(error);
+    }
 };

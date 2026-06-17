@@ -22,8 +22,9 @@ function Admin() {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
-  const [uploadProgress, setUploadProgress] = useState(null);
-  const abortControllerRef = useRef(null);
+  const [uploadProgress, setUploadProgress] = useState(null);   //percentage bar
+
+  const abortControllerRef = useRef(null);    //storing state but no re rendering
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -124,16 +125,17 @@ function Admin() {
       abortControllerRef.current.abort();
     }
   };
-
+  
   const handleProductSubmit = async (e, status = "active") => {
     if (e) e.preventDefault();
 
     if (!productForm.name) {
-      showAlert("danger", "Product name is required.");
+      showAlert("danger", "Product name is required");
       return;
     }
 
-    let activeMultipartSession = null;
+    let activeMultipartSession = null;            //track upload info
+
     const controller = new AbortController();
     abortControllerRef.current = controller;
 
@@ -142,10 +144,9 @@ function Admin() {
       let finalOriginalName = productForm.originalName;
 
       if (selectedFile) {
-        const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB chunk
-
+        const CHUNK_SIZE = 5 * 1024 * 1024; //5MB
         if (selectedFile.size < CHUNK_SIZE) {
-          setUploadProgress(10);
+          setUploadProgress(10);     
           const formData = new FormData();
           formData.append("image", selectedFile);
 
@@ -154,43 +155,43 @@ function Admin() {
               "Content-Type": "multipart/form-data",
             },
             signal: controller.signal,
-            onUploadProgress: (progressEvent) => {
-              const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+            onUploadProgress: (p) => {
+              const percent = Math.round((p.loaded * 100)/ p.total);
               setUploadProgress(percent);
             }
           });
           finalImageUrl = uploadRes.data.imageUrl;
           finalOriginalName = uploadRes.data.originalName || selectedFile.name;
-        } else {
+        } 
+        else{                        //multipart case
           setUploadProgress(0);
 
-          // Step 1: Start
-          const startRes = await api.post("/upload/multipart/start", {
+          //start
+          const startRes= await api.post("/upload/multipart/start",{
             fileName: selectedFile.name,
             contentType: selectedFile.type,
-          }, {
+          },{
             signal: controller.signal
-          });
+          })
+          const {uploadId, key}= startRes.data;
+          activeMultipartSession= {uploadId,key};
+          const totalParts= Math.ceil(selectedFile.size/CHUNK_SIZE);
+          const parts=[];
 
-          const { uploadId, key } = startRes.data;
-          activeMultipartSession = { uploadId, key };
-          const totalParts = Math.ceil(selectedFile.size / CHUNK_SIZE);
-          const parts = [];
+          //upload parts
+          for(let partNumber=1;partNumber<=totalParts;partNumber++){
+            const start= (partNumber-1)*CHUNK_SIZE;
+            const end= Math.min(start+CHUNK_SIZE, selectedFile.size);
+            const chunk= selectedFile.slice(start,end);
 
-          // Step 2: Upload parts sequentially
-          for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-            const start = (partNumber - 1) * CHUNK_SIZE;
-            const end = Math.min(start + CHUNK_SIZE, selectedFile.size);
-            const chunk = selectedFile.slice(start, end);
+            const formData= new FormData();
+            formData.append("uploadId",uploadId);
+            formData.append("key",key);
+            formData.append("partNumber",partNumber);
+            formData.append("chunk",chunk);
 
-            const formData = new FormData();
-            formData.append("uploadId", uploadId);
-            formData.append("key", key);
-            formData.append("partNumber", partNumber);
-            formData.append("chunk", chunk);
-
-            const partRes = await api.post("/upload/multipart/part", formData, {
-              headers: {
+            const partRes= await api.post("/upload/multipart/part",formData,{
+              headers:{
                 "Content-Type": "multipart/form-data",
               },
               signal: controller.signal,
@@ -202,22 +203,14 @@ function Admin() {
                 setUploadProgress(percent);
               }
             });
+            parts.push({PartNumber: partNumber, ETag: partRes.data.ETag});
+          };
 
-            parts.push({
-              PartNumber: partNumber,
-              ETag: partRes.data.ETag,
-            });
-          }
-
-          // Step 3: Complete
-          const completeRes = await api.post("/upload/multipart/complete", {
-            uploadId,
-            key,
-            parts,
-          }, {
-            signal: controller.signal
-          });
-
+          //complete
+          const completeRes= await api.post("/upload/multipart/complete",{
+            uploadId, key, parts,
+          },{signal: controller.signal}
+          );
           finalImageUrl = completeRes.data.imageUrl;
           finalOriginalName = selectedFile.name;
           setUploadProgress(100);
@@ -230,7 +223,7 @@ function Admin() {
         price: Number(productForm.price),
         stock: parseInt(productForm.stock, 10),
         categoryName: productForm.categoryName,
-        imageUrl: finalImageUrl || "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500",
+        imageUrl: finalImageUrl ,
         originalName: finalOriginalName,
         status: status,
       };
@@ -244,7 +237,7 @@ function Admin() {
       }
       setShowProductModal(false);
       setEditingProduct(null);
-      //Reset form
+      //reset form
       setProductForm({
         name: "",
         description: "",
@@ -269,14 +262,14 @@ function Admin() {
             }
           });
         } catch (abortErr) {
-          console.error("Failed to abort multipart upload:", abortErr);
+          console.error("Failed to abort multipart upload", abortErr);
         }
       }
       console.error(err);
       if (isAborted) {
-        showAlert("warning", "Upload cancelled by user.");
+        showAlert("warning", "Upload cancelled by user");
       } else {
-        showAlert("danger", err.response?.data?.message || "Failed to save product.");
+        showAlert("danger", err.response?.data?.message);
       }
     } finally {
       setUploadProgress(null);
