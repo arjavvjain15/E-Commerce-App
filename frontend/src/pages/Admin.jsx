@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import api from "../api";
 
 function Admin() {
@@ -22,6 +22,8 @@ function Admin() {
 
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState("");
+  const [uploadProgress, setUploadProgress] = useState(null);
+  const abortControllerRef = useRef(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -77,6 +79,7 @@ function Admin() {
     }
   };
 
+  
 
   useEffect(() => {
     fetchData();
@@ -116,6 +119,12 @@ function Admin() {
   }, [products, productFilter]);
 
 
+  const handleAbortUpload = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+  };
+
   const handleProductSubmit = async (e, status = "active") => {
     if (e) e.preventDefault();
 
@@ -124,21 +133,95 @@ function Admin() {
       return;
     }
 
+    let activeMultipartSession = null;
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try{
       let finalImageUrl = productForm.imageUrl;
       let finalOriginalName = productForm.originalName;
 
       if (selectedFile) {
-        const formData = new FormData();
-        formData.append("image", selectedFile);
+        const CHUNK_SIZE = 5 * 1024 * 1024; // 5 MB chunk
 
-        const uploadRes = await api.post("/upload", formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        });
-        finalImageUrl = uploadRes.data.imageUrl;
-        finalOriginalName = uploadRes.data.originalName || selectedFile.name;
+        if (selectedFile.size < CHUNK_SIZE) {
+          setUploadProgress(10);
+          const formData = new FormData();
+          formData.append("image", selectedFile);
+
+          const uploadRes = await api.post("/upload", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            signal: controller.signal,
+            onUploadProgress: (progressEvent) => {
+              const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+              setUploadProgress(percent);
+            }
+          });
+          finalImageUrl = uploadRes.data.imageUrl;
+          finalOriginalName = uploadRes.data.originalName || selectedFile.name;
+        } else {
+          setUploadProgress(0);
+
+          // Step 1: Start
+          const startRes = await api.post("/upload/multipart/start", {
+            fileName: selectedFile.name,
+            contentType: selectedFile.type,
+          }, {
+            signal: controller.signal
+          });
+
+          const { uploadId, key } = startRes.data;
+          activeMultipartSession = { uploadId, key };
+          const totalParts = Math.ceil(selectedFile.size / CHUNK_SIZE);
+          const parts = [];
+
+          // Step 2: Upload parts sequentially
+          for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
+            const start = (partNumber - 1) * CHUNK_SIZE;
+            const end = Math.min(start + CHUNK_SIZE, selectedFile.size);
+            const chunk = selectedFile.slice(start, end);
+
+            const formData = new FormData();
+            formData.append("uploadId", uploadId);
+            formData.append("key", key);
+            formData.append("partNumber", partNumber);
+            formData.append("chunk", chunk);
+
+            const partRes = await api.post("/upload/multipart/part", formData, {
+              headers: {
+                "Content-Type": "multipart/form-data",
+              },
+              signal: controller.signal,
+              onUploadProgress: (progressEvent) => {
+                const chunkLoaded = progressEvent.loaded;
+                const chunkTotal = progressEvent.total || (end - start);
+                const totalLoaded = start + (chunkLoaded / chunkTotal) * (end - start);
+                const percent = Math.round((totalLoaded / selectedFile.size) * 95);
+                setUploadProgress(percent);
+              }
+            });
+
+            parts.push({
+              PartNumber: partNumber,
+              ETag: partRes.data.ETag,
+            });
+          }
+
+          // Step 3: Complete
+          const completeRes = await api.post("/upload/multipart/complete", {
+            uploadId,
+            key,
+            parts,
+          }, {
+            signal: controller.signal
+          });
+
+          finalImageUrl = completeRes.data.imageUrl;
+          finalOriginalName = selectedFile.name;
+          setUploadProgress(100);
+        }
       }
 
       const payload = {
@@ -153,10 +236,10 @@ function Admin() {
       };
 
       if (editingProduct) {
-        await api.put(`/products/${editingProduct.id}`, payload);
+        await api.put(`/products/${editingProduct.id}`, payload, { signal: controller.signal });
         showAlert("success", `Product updated successfully (${status})!`);
       } else {
-        await api.post("/products", payload);
+        await api.post("/products", payload, { signal: controller.signal });
         showAlert("success", `Product created successfully (${status})!`);
       }
       setShowProductModal(false);
@@ -176,8 +259,28 @@ function Admin() {
       fetchData();
     }
     catch (err) {
+      const isAborted = err.name === "CanceledError" || err.message === "canceled" || api.isCancel?.(err);
+      if (activeMultipartSession) {
+        try {
+          await api.delete("/upload/multipart/abort", {
+            data: {
+              uploadId: activeMultipartSession.uploadId,
+              key: activeMultipartSession.key
+            }
+          });
+        } catch (abortErr) {
+          console.error("Failed to abort multipart upload:", abortErr);
+        }
+      }
       console.error(err);
-      showAlert("danger", err.response?.data?.message || "Failed to save product.");
+      if (isAborted) {
+        showAlert("warning", "Upload cancelled by user.");
+      } else {
+        showAlert("danger", err.response?.data?.message || "Failed to save product.");
+      }
+    } finally {
+      setUploadProgress(null);
+      abortControllerRef.current = null;
     }
   };
 
@@ -845,24 +948,22 @@ function Admin() {
                         border: "2px dashed var(--border)",
                         borderRadius: "8px",
                         padding: "24px",
-                        cursor: "pointer",
+                        cursor: uploadProgress !== null ? "not-allowed" : "pointer",
                         textAlign: "center"
                       }}
-                      onClick={() => document.getElementById("product-image-file").click()}
+                      onClick={() => {
+                        if (uploadProgress === null) {
+                          document.getElementById("product-image-file").click();
+                        }
+                      }}
                     >
                       <input
                         type="file"
                         id="product-image-file"
-                        accept="image/*"
                         style={{ display: "none" }}
                         onChange={handleFileChange}
+                        disabled={uploadProgress !== null}
                       />
-                      <button
-                      type="submit"
-                      style={{}}
-                      >
-
-                      </button>
                       <span style={{ fontSize: "2rem", marginBottom: "8px" }}></span>
                       <span style={{ fontSize: "0.7rem", color: "var(--text)" }}>Click to select an image file</span>
                       {selectedFile && (
@@ -889,12 +990,41 @@ function Admin() {
                 </div>
               </div>
 
+              {uploadProgress !== null && (
+                <div style={{ marginBottom: "16px", padding: "0 8px" }}>
+                  <div style={{ background: "var(--border)", width: "100%", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ background: "var(--primary)", width: `${uploadProgress}%`, height: "100%", transition: "width 0.3s" }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+                    <p style={{ fontSize: "0.85rem", color: "var(--text)", margin: 0 }}>
+                      Uploading file: {uploadProgress}%
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleAbortUpload}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--danger)",
+                        fontSize: "0.85rem",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        padding: 0
+                      }}
+                    >
+                      Cancel Upload
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
                 <button
                   type="button"
                   className="btn btn-primary"
                   style={{ flex: 1, minWidth: "120px" }}
                   onClick={() => handleProductSubmit(null, "active")}
+                  disabled={uploadProgress !== null}
                 >
                   Publish
                 </button>
@@ -903,6 +1033,7 @@ function Admin() {
                   className="btn btn-secondary"
                   style={{ flex: 1, minWidth: "120px", backgroundColor: "var(--accent-bg)", color: "var(--accent)" }}
                   onClick={() => handleProductSubmit(null, "draft")}
+                  disabled={uploadProgress !== null}
                 >
                    Save as Draft
                 </button>
@@ -914,6 +1045,7 @@ function Admin() {
                     setShowProductModal(false);
                     setEditingProduct(null);
                   }}
+                  disabled={uploadProgress !== null}
                 >
                   Cancel
                 </button>
