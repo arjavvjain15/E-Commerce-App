@@ -909,6 +909,7 @@ function Admin() {
                   <option value="Mobile">Mobile</option>
                   <option value="Audio">Audio</option>
                   <option value="Accessories">Accessories</option>
+                  <option value="Others">Others</option>
                 </select>
               </div>
 

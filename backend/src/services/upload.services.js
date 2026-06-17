@@ -76,7 +76,7 @@ export const uploadPart= async(uploadId,key, partNumber,buffer)=>{
 export const completeMultipartUpload= async(uploadId,key,parts)=>{
     const {s3,bucket,region}=getS3ClientAndConfig();
 
-    const list = parts.map((p) => ({
+    const list = parts.map((p)=>({
       PartNumber: Number(p.PartNumber||p.partNumber),
       ETag: p.ETag,
     })).sort((a, b) => a.PartNumber - b.PartNumber);

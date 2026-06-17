@@ -146,7 +146,7 @@ function Admin() {
       if (selectedFile) {
         const CHUNK_SIZE = 5 * 1024 * 1024; //5MB
         if (selectedFile.size < CHUNK_SIZE) {
-          setUploadProgress(10);     
+          setUploadProgress(0);     
           const formData = new FormData();
           formData.append("image", selectedFile);
 
@@ -168,11 +168,12 @@ function Admin() {
 
           //start
           const startRes= await api.post("/upload/multipart/start",{
-            fileName: selectedFile.name,
+            fileName: selectedFile.name,                        //body
             contentType: selectedFile.type,
           },{
-            signal: controller.signal
-          })
+            signal: controller.signal                           //config
+          });
+
           const {uploadId, key}= startRes.data;
           activeMultipartSession= {uploadId,key};
           const totalParts= Math.ceil(selectedFile.size/CHUNK_SIZE);
@@ -195,22 +196,23 @@ function Admin() {
                 "Content-Type": "multipart/form-data",
               },
               signal: controller.signal,
-              onUploadProgress: (progressEvent) => {
-                const chunkLoaded = progressEvent.loaded;
-                const chunkTotal = progressEvent.total || (end - start);
-                const totalLoaded = start + (chunkLoaded / chunkTotal) * (end - start);
-                const percent = Math.round((totalLoaded / selectedFile.size) * 95);
-                setUploadProgress(percent);
+              onUploadProgress: (p) => {
+                const chunkLoaded= p.loaded;
+                const chunkTotal= p.total || (end - start);
+                const totalLoaded= start + (chunkLoaded / chunkTotal) * (end - start);
+                const percentage= Math.round((totalLoaded / selectedFile.size) * 95);
+                setUploadProgress(percentage);
               }
             });
             parts.push({PartNumber: partNumber, ETag: partRes.data.ETag});
           };
-
+          
           //complete
           const completeRes= await api.post("/upload/multipart/complete",{
-            uploadId, key, parts,
-          },{signal: controller.signal}
-          );
+            uploadId,key,parts,
+          },
+          {signal: controller.signal
+          });
           finalImageUrl = completeRes.data.imageUrl;
           finalOriginalName = selectedFile.name;
           setUploadProgress(100);
@@ -227,11 +229,12 @@ function Admin() {
         originalName: finalOriginalName,
         status: status,
       };
-
-      if (editingProduct) {
+       
+      if (editingProduct){
         await api.put(`/products/${editingProduct.id}`, payload, { signal: controller.signal });
         showAlert("success", `Product updated successfully (${status})!`);
-      } else {
+      }
+      else{
         await api.post("/products", payload, { signal: controller.signal });
         showAlert("success", `Product created successfully (${status})!`);
       }
@@ -925,6 +928,7 @@ function Admin() {
                   <option value="Mobile">Mobile</option>
                   <option value="Audio">Audio</option>
                   <option value="Accessories">Accessories</option>
+                  <option value="Others">Others</option>
                 </select>
               </div>
 
@@ -1005,7 +1009,7 @@ function Admin() {
                         padding: 0
                       }}
                     >
-                      Cancel Upload
+                    Cancel Upload
                     </button>
                   </div>
                 </div>

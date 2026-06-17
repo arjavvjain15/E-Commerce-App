@@ -12,8 +12,8 @@ router.post("/", authMiddleware, roleMiddleware(["admin"]), upload.single("image
 
 //multipart
 router.post("/multipart/start",authMiddleware,roleMiddleware(["admin"]),startMultipart);
-router.post("/multistart/part",authMiddleware,roleMiddleware(["admin"]), upload.single("chunk"),uploadPartHandler);
-router.post("multistart/complete",authMiddleware,roleMiddleware(["admin"]),completeMultipart);
-router.delete(",ultipart/abort",authMiddleware,roleMiddleware(["admin"]),abortMultipart);
+router.post("/multipart/part",authMiddleware,roleMiddleware(["admin"]), upload.single("chunk"),uploadPartHandler);
+router.post("/multipart/complete",authMiddleware,roleMiddleware(["admin"]),completeMultipart);
+router.delete("/multipart/abort",authMiddleware,roleMiddleware(["admin"]),abortMultipart);
 
 export default router;

@@ -1,10 +1,5 @@
-# AWS S3 Multipart Upload System Guide
 
-This guide details the newly implemented S3 Multipart Upload system. It includes the API architecture, a step-by-step lifecycle explanation, comparative analysis against single-part uploads, and a fully functional React client implementation.
-
----
-
-## 🎨 Architecture & Flow Overview
+## Architecture & Flow Overview
 
 S3 Multipart Upload splits large files into chunk buffers, uploads them sequentially or in parallel, and asks S3 to combine them once finished.
 
@@ -45,7 +40,7 @@ S3 Multipart Upload splits large files into chunk buffers, uploads them sequenti
 
 ---
 
-## 🔐 1. Lifecycle Steps Explained (Beginner-Friendly)
+##  1. Lifecycle Steps Explained (Beginner-Friendly)
 
 ### Step 1: Start Upload (`CreateMultipartUploadCommand`)
 * **Endpoint:** `POST /api/upload/multipart/start`
@@ -65,118 +60,6 @@ S3 Multipart Upload splits large files into chunk buffers, uploads them sequenti
 * **Endpoint:** `DELETE /api/upload/multipart/abort`
 * **What happens:** If an upload fails, is cancelled, or times out, the client notifies the server to call S3 to discard all uploaded parts.
 * **Why aborting is important:** Unfinished multipart uploads store parts in your S3 bucket indefinitely, which **costs money**! Aborting deletes the temporary parts and stops billing.
-
----
-
-## 💻 2. React Frontend Implementation Example
-
-Here is a fully functional React implementation showing how to split a file into chunks, upload them sequentially, collect ETags, update progress, and complete the upload:
-
-```jsx
-import React, { useState } from "react";
-import axios from "axios";
-
-// Standard S3 rule: Minimum multipart chunk size is 5MB
-const CHUNK_SIZE = 5 * 1024 * 1024; 
-
-function VideoUpload() {
-  const [file, setFile] = useState(null);
-  const [progress, setProgress] = useState(0);
-  const [uploading, setUploading] = useState(false);
-  const [fileUrl, setFileUrl] = useState("");
-
-  const handleUpload = async () => {
-    if (!file) return;
-    setUploading(true);
-    setProgress(0);
-
-    try {
-      // Step 1: Start Multipart Upload Session
-      const startRes = await axios.post("http://localhost:3000/api/upload/multipart/start", {
-        fileName: file.name,
-        contentType: file.type,
-      }, { withCredentials: true });
-
-      const { uploadId, key } = startRes.data;
-      const totalParts = Math.ceil(file.size / CHUNK_SIZE);
-      const parts = [];
-
-      // Step 2: Upload chunks sequentially
-      for (let partNumber = 1; partNumber <= totalParts; partNumber++) {
-        const start = (partNumber - 1) * CHUNK_SIZE;
-        const end = Math.min(start + CHUNK_SIZE, file.size);
-        const chunk = file.slice(start, end);
-
-        // Prepare FormData for the chunk
-        const formData = new FormData();
-        formData.append("uploadId", uploadId);
-        formData.append("key", key);
-        formData.append("partNumber", partNumber);
-        formData.append("chunk", chunk);
-
-        // Post the chunk to /part
-        const partRes = await axios.post("http://localhost:3000/api/upload/multipart/part", formData, {
-          headers: { "Content-Type": "multipart/form-data" },
-          withCredentials: true,
-        });
-
-        // Collect ETag returned from S3
-        parts.push({
-          PartNumber: partNumber,
-          ETag: partRes.data.ETag,
-        });
-
-        // Update progress percentage
-        setProgress(Math.round((partNumber / totalParts) * 100));
-      }
-
-      // Step 3: Complete Multipart Upload Session
-      const completeRes = await axios.post("http://localhost:3000/api/upload/multipart/complete", {
-        uploadId,
-        key,
-        parts,
-      }, { withCredentials: true });
-
-      setFileUrl(completeRes.data.imageUrl);
-      alert("Upload completed successfully!");
-    } catch (err) {
-      console.error("Multipart Upload Failed:", err);
-      alert("Upload failed. Make sure to abort any incomplete session to avoid charges.");
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  return (
-    <div style={{ padding: "20px", border: "1px solid #ccc", borderRadius: "8px" }}>
-      <h3>S3 Multipart Uploader</h3>
-      <input type="file" onChange={(e) => setFile(e.target.files[0])} disabled={uploading} />
-      <button onClick={handleUpload} disabled={!file || uploading} style={{ marginLeft: "10px" }}>
-        {uploading ? "Uploading..." : "Upload File"}
-      </button>
-
-      {uploading && (
-        <div style={{ marginTop: "20px" }}>
-          <div style={{ background: "#eee", width: "100%", height: "20px", borderRadius: "10px" }}>
-            <div style={{ background: "#4caf50", width: `${progress}%`, height: "100%", borderRadius: "10px", transition: "width 0.3s" }} />
-          </div>
-          <p>{progress}% Uploaded</p>
-        </div>
-      )}
-
-      {fileUrl && (
-        <p style={{ marginTop: "20px" }}>
-          Uploaded S3 URL: <a href={fileUrl} target="_blank" rel="noreferrer">{fileUrl}</a>
-        </p>
-      )}
-    </div>
-  );
-}
-
-export default VideoUpload;
-```
-
----
 
 ## 📊 3. Comparison: Single vs. Multipart Upload
 
