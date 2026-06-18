@@ -6,15 +6,8 @@ const getAiClient= ()=>{
     const apiKey=process.env.GEMINI_API_KEY;
     if(!apiKey) throw new Error("Gemini API Key is missing");
     return new GoogleGenAI({apiKey});
-}
+};
 
-/**
- * Simplifies query matching to only category filtering, fetches products & reviews,
- * and delegates business reasoning (budget, stock, comparison) to the Gemini model.
- * 
- * @param {string} userMessage - User's chat message
- * @returns {Promise<string>} - Chatbot response
- */
 export const processChat = async (userMessage) => {
   const lowercaseMsg = userMessage.toLowerCase();
   
