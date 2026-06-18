@@ -2260,3 +2260,6 @@ p {
 .btn-add-to-cart.added:hover {
   background-color: #f7ca00;
 }
+.chatbot{
+  color:red;
+}

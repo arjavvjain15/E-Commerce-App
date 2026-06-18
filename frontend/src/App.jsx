@@ -11,6 +11,7 @@ import MyOrders from "./pages/MyOrders";
 import { useTheme } from "./context/ThemeContext";
 import { useAuth } from "./context/AuthContext";
 import Footer from "./components/Footer";
+import ChatBot from "./components/ChatBot";
 
 function App() {
   const { theme } = useTheme();
@@ -40,6 +41,7 @@ function App() {
             <Route path="/admin" element={isAuthenticated && user?.role === "admin" ? <Admin /> : <Navigate to="/" />} />
           </Routes>
         </main>
+        {isAuthenticated&& user?.role!=="admin"&& <ChatBot/>}
         <Footer />
       </BrowserRouter>
     </div>

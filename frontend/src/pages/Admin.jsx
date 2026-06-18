@@ -200,7 +200,7 @@ function Admin() {
                 const chunkLoaded= p.loaded;
                 const chunkTotal= p.total || (end - start);
                 const totalLoaded= start + (chunkLoaded / chunkTotal) * (end - start);
-                const percentage= Math.round((totalLoaded / selectedFile.size) * 95);
+                const percentage= Math.round((totalLoaded / selectedFile.size) * 99);
                 setUploadProgress(percentage);
               }
             });

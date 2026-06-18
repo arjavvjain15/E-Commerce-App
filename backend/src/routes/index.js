@@ -7,6 +7,7 @@ import orderRoutes from "./order.routes.js";
 import adminRoutes from "./admin.routes.js";
 import bannerRoutes from "./banner.routes.js";
 import uploadRoutes from "./upload.routes.js";
+import chatRoutes from "./chat.routes.js";
 
 const router = Router();
 
@@ -18,6 +19,6 @@ router.use("/orders", orderRoutes);
 router.use("/admin", adminRoutes);
 router.use("/banners",bannerRoutes);
 router.use("/upload", uploadRoutes);
-
+router.use("/chat",chatRoutes);
 
 export default router;

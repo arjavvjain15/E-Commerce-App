@@ -8,3 +8,6 @@ frontend/dist
 backend/dist
 
 .DS_Store
+
+PROJECT_FLOW.md
+MULTIPART_UPLOAD_GUIDE.md

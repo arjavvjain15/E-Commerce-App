@@ -81,7 +81,7 @@ export const completeMultipartUpload= async(uploadId,key,parts)=>{
       ETag: p.ETag,
     })).sort((a, b) => a.PartNumber - b.PartNumber);
 
-    const command= CompleteMultipartUploadCommand({
+    const command= new CompleteMultipartUploadCommand({
         Bucket: bucket,
         Key: key,
         UploadId: uploadId,

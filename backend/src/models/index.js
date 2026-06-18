@@ -11,6 +11,7 @@ import Order from "./order.model.js";
 import OrderItem from "./orderItem.model.js";
 import Review from "./review.model.js";
 import Banner from "./banner.model.js";
+import Chat from "./chat.models.js";
 
 
 // User and Session 
@@ -70,4 +71,8 @@ Review.belongsTo(User, { foreignKey: "userId" });
 Product.hasMany(Review, { foreignKey: "productId", onDelete: "CASCADE" });
 Review.belongsTo(Product, { foreignKey: "productId" });
 
-export {sequelize,User,Session,Category,Product,Cart,CartItem,Wishlist,WishlistItem,Order,OrderItem,Review,Banner};
+// User and Chat
+User.hasOne(Chat,{foreignKey: "userId", onDelete:"CASCADE"});
+Chat.belongsTo(User, {foreignKey: "userId"});
+
+export {sequelize,User,Session,Category,Product,Cart,CartItem,Wishlist,WishlistItem,Order,OrderItem,Review,Banner,Chat};
