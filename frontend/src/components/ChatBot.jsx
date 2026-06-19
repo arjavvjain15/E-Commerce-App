@@ -1,4 +1,3 @@
-import { Link, data} from "react-router-dom";
 import React from "react";
 import api from "../api";
 import { useState,useEffect,useRef } from "react";
@@ -12,7 +11,7 @@ function ChatBot(){
     const [messages,setMessages]= useState([
         {
             sender:"bot",
-            text: "Hello! , I am your AI Shopping Assistant. What can I do for you?",
+            text: "Hello!, I am your AI Shopping Assistant. What can I do for you?",
             timestamp: new Date()
         }
     ]);
@@ -24,7 +23,7 @@ function ChatBot(){
 
     useEffect(()=>{
         scrollToBottom()
-    },[messages],[isLoading],[isOpen]);
+    },[messages,isLoading,isOpen]);
 
     useEffect(()=>{
         scrollToBottom();
@@ -115,7 +114,7 @@ function ChatBot(){
           </svg>
         </button>
       )}
-      
+
         {isOpen && (
         <div
           className="chat-window"

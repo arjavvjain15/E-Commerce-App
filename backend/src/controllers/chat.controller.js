@@ -3,8 +3,9 @@ import Chat from "../models/chat.models.js";
 
 export const handleChat= async(req,res,next)=>{
     try{
-        const message= req.body;
+        const { message } = req.body;
         if(!message) return res.status(400).json({message:"Message is mandatory"});
+        if(message.length>1000) return res.status(400).json({message:"Message Too Long"});
 
         const userId= req.user.id;
         const today= new Date().toISOString().split("T")[0];
@@ -26,8 +27,15 @@ export const handleChat= async(req,res,next)=>{
         //rate limiting
         if(usageRecord.queryCount>=20) return res.status(429).json({message:"You have exceeded your daily query limit",limitExceeded:"true"});
 
-        const answer= await processChat(message);
-        await usageRecord.queryCount("increment",{by: 1});
+        try{
+            const answer= await processChat(message);
+            await usageRecord.increment("queryCount",{by: 1});
+            return res.status(200).json({answer});
+        }
+        catch(error){
+            console.error(error);
+            return res.status(500).json({message: "AI Assistant is not available at this moment"});
+        }
     }
     catch(error){
         next(error);

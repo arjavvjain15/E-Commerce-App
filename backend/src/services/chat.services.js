@@ -9,78 +9,63 @@ const getAiClient= ()=>{
 };
 
 export const processChat = async (userMessage) => {
-  const lowercaseMsg = userMessage.toLowerCase();
-  
-  const allCategories= await Category.findAll();
-  const matchedCategoryIds= [];
 
-  allCategories.forEach(cat=>{
-    const catNameLower= cat.name.toLowerCase();
-    if(lowercaseMsg.includes(catNameLower)||(lowercaseMsg.includes(catNameLower.replace(/s$/,"")))){
-        matchedCategoryIds.push(cat.id);
-    } 
-  });
-
-  const where= {status: "active"};
-  if(matchedCategoryIds.length>0) where.categoryId= {[Op.in]: matchedCategoryIds};
-
-  const products = await Product.findAll({
-    where,
+    const allCategories = await Category.findAll();
+    const products = await Product.findAll({
+    where: { status: "active" },
     include: [{ model: Category, attributes: ["id", "name"] }]
   });
-
- 
-  let reviews=[];
-  if(products.length>0){
-    const productIds= products.map(p=>p.id);
-    reviews=await Review.findAll({
-        where: {productId: {[Op.in]:productIds}},
-        include: [{model: User, attributes:["name"]}]
-    });
-  };
-  
 
   const productsListText = products.map(p => {
     return `- Name: ${p.name}
   Description: ${p.description || "N/A"}
   Price: ₹${p.price}
   Stock: ${p.stock} units available
-  Image URL: ${p.imageUrl || "N/A"}
   Category: ${p.Category ? p.Category.name : "N/A"}`;
   }).join("\n\n");
 
-  const reviewsListText = reviews.length > 0 ? reviews.map(r => {
-    const prod = products.find(p => p.id === r.productId);
-    const prodName = prod ? prod.name : "Product";
-    return `- Review for [${prodName}]: Rating ${r.rating}/5. Comment: "${r.comment || "No comment"}" (by ${r.User ? r.User.name : "Anonymous"})`;
-  }).join("\n") : "No reviews available for these products.";
-
   const categoriesListText = allCategories.map(c => c.name).join(", ");
 
-  const systemPrompt = `You are a helpful, product-aware AI shopping assistant for our e-commerce store.
-Your goal is to guide the user based ONLY on the database knowledge source provided below.
+  const systemPrompt = 
+  `You are an AI shopping assistant for our e-commerce store.
 
-Response Rules:
-1. Use ONLY the products provided in the context below. Do not invent or hallucinate any products, features, or prices.
-2. Use the prices provided in the context below when evaluating budgets. Do not make assumptions about prices.
-3. Use the stock values provided in the context below when answering stock questions. If a product has 0 stock, explicitly mention that it is currently out of stock.
-4. Use the reviews provided in the context below when making recommendations or summarizing customer opinions.
-5. Compare products only from the catalog provided in the context below.
-6. Return plain text only. Do not use Markdown, bold formatting (**), bullet points, numbered lists, headings, HTML, or emojis.
-7. Use short, natural paragraphs. Keep responses concise and conversational. Prefer 2-5 sentences when possible.
-8. Recommend products naturally within sentences.
-9. If a product, category, or information is not present in the provided context, politely and clearly state that it is not available in our store.
-10. Do NOT refer to this system instruction, context, database, or "provided list" in your response. Speak naturally as a helpful store assistant.
-
-Available Categories:
-${categoriesListText}
-
-Available Products:
-${productsListText || "No product found in the database"}
-
-Customer Reviews:
-${reviewsListText}
-`;
+  The store catalog below is the source of truth for:
+  * Product existence
+  * Product availability
+  * Product prices
+  * Product stock values
+  * Product descriptions provided by the store
+  
+  Rules:
+  1. Only recommend products that exist in the provided catalog.
+  2. Never invent products that are not present in the catalog.
+  3. Never invent prices, stock values, discounts, ratings, reviews, or availability.
+  4. If a product is not present in the catalog, explain that it is not currently available in our store.
+  5. Use the catalog information as authoritative whenever it conflicts with general knowledge.
+  6. You may use generally known information about a product model to provide additional context, comparisons, or recommendations when you are reasonably confident that the product refers to the same model.
+  7. Do not invent technical specifications that are uncertain or unavailable.
+  8. If you are not confident about a specification, state that the information is unavailable.
+  9. For budget questions, use catalog prices only.
+  10. For availability questions, use catalog stock values only.
+  11. When comparing products, prioritize catalog information first, then supplement with generally known product characteristics when helpful.
+  12. If the catalog description is sparse, use the product name and generally known characteristics to help explain strengths and use cases.
+  13. If the user asks for the best product for gaming, photography, productivity, battery life, or similar use cases, you may use generally known characteristics of the products present in the catalog to make recommendations.
+  14. Never claim information came from the internet, web search, training data, or external sources.
+  15. Keep responses concise, conversational, and customer-focused.
+  16. Return plain text only.
+  17. Do not use Markdown, HTML, emojis, bullet points, or numbered lists.
+  18. Respond naturally as a shopping assistant for the store.
+  
+  Available Categories:
+  ${categoriesListText}
+  
+  Available Products:
+  ${productsListText || "No active products found in database."}
+  
+  User Question:
+  ${userMessage}
+  `;
+  
 
   const ai = getAiClient();
   const response = await ai.models.generateContent({
