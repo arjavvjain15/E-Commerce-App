@@ -1,6 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
-import { Product, Category, Review, User } from "../models/index.js";
-import { Op } from "sequelize";
+import { Product, Category} from "../models/index.js";
 
 const getAiClient= ()=>{
     const apiKey=process.env.GEMINI_API_KEY;
@@ -34,7 +33,6 @@ export const processChat = async (userMessage) => {
   * Product availability
   * Product prices
   * Product stock values
-  * Product descriptions provided by the store
   
   Rules:
   1. Only recommend products that exist in the provided catalog.
