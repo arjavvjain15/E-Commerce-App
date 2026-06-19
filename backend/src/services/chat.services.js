@@ -15,6 +15,8 @@ export const processChat = async (userMessage) => {
     include: [{ model: Category, attributes: ["id", "name"] }]
   });
 
+  
+
   const productsListText = products.map(p => {
     return `- Name: ${p.name}
   Description: ${p.description || "N/A"}
@@ -53,6 +55,7 @@ export const processChat = async (userMessage) => {
   16. Return plain text only.
   17. Do not use Markdown, HTML, emojis, bullet points, or numbered lists.
   18. Respond naturally as a shopping assistant for the store.
+  19. Your response should be crisp and concise so that in few words only, the customer is helped and has been answered waht he/she actually asked.
   
   Available Categories:
   ${categoriesListText}

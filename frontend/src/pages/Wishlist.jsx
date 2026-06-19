@@ -34,6 +34,11 @@ function Wishlist() {
               <img src={product.image} alt={product.title} />
               <h3>{product.title}</h3>
               <p className="category">Category: {product.category}</p>
+              {product.stock <= 0 ? (
+                <span className="badge-outofstock">Out of Stock</span>
+              ) : (
+                <p className="rating" style={{ visibility: "hidden", fontSize: "0.85rem", margin: "2px 0" }}>In Stock</p>
+              )}
               <p className="price">Price: INR {product.price}</p>
               
               <div className="wishlist-actions">
@@ -41,10 +46,11 @@ function Wishlist() {
                   View
                 </Link>
                 <button 
-                  className="btn btn-primary"
-                  onClick={() => addToCart(product)}
+                  className={`btn btn-primary ${product.stock <= 0 ? "btn-disabled" : ""}`}
+                  onClick={() => product.stock > 0 && addToCart(product)}
+                  disabled={product.stock <= 0}
                 >
-                  {quantity > 0 ? `Added (${quantity})` : "Add to Cart"}
+                  {product.stock <= 0 ? "Out of Stock" : quantity > 0 ? `Added (${quantity})` : "Add to Cart"}
                 </button>
               </div>
             </div>

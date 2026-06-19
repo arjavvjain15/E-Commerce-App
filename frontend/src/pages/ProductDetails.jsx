@@ -137,7 +137,10 @@ function ProductDetails() {
           <img src={product.image} alt={product.title} />
         </div>
         <div className="product-details-info">
-          <span className="badge-category">{product.category}</span>
+          <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
+            <span className="badge-category" style={{ marginBottom: 0 }}>{product.category}</span>
+            {product.stock <= 0 && <span className="badge-outofstock" style={{ marginBottom: 0 }}>Out of Stock</span>}
+          </div>
           <h1>{product.title}</h1>
           <p className="description">{product.description}</p>
           <div className="meta-row">
@@ -147,8 +150,12 @@ function ProductDetails() {
             </span>
           </div>
           <div className="action-buttons">
-            <button className="btn btn-primary btn-large" onClick={() => addToCart(product)}>
-              {quantity > 0 ? `Added to Cart (${quantity})` : "Add to Cart"}
+            <button 
+              className={`btn btn-primary btn-large ${product.stock <= 0 ? "btn-disabled" : ""}`} 
+              onClick={() => product.stock > 0 && addToCart(product)}
+              disabled={product.stock <= 0}
+            >
+              {product.stock <= 0 ? "Out of Stock" : quantity > 0 ? `Added to Cart (${quantity})` : "Add to Cart"}
             </button>
             <button
               className={`btn btn-wishlist btn-large ${isInWishlist ? "active" : ""}`}

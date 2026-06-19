@@ -14,12 +14,18 @@ function ProductCard({ product }) {
   const isInWishlist = wishlist.some((item) => item.id === product.id);
   const cartItem = cartItems.find((item) => item.id === product.id);
   const quantity = cartItem ? cartItem.quantity : 0;
+  const isOutOfStock = product.stock <= 0;
 
   return (
     <div className="product-card">
       <img src={product.image} alt={product.title} />
       <h3>{product.title}</h3>
       <p className="category">Category: {product.category}</p>
+      {isOutOfStock ? (
+        <span className="badge-outofstock">Out of Stock</span>
+      ) : (
+        <p className="rating" style={{ visibility: "hidden" }}>In Stock</p> // spacer to maintain alignment
+      )}
       <p className="price">Price: INR {product.price}</p>
       <p className="rating">Rating: {product.rating}</p>
       
@@ -34,10 +40,11 @@ function ProductCard({ product }) {
           {isInWishlist ?  <FaHeart/>: <CiHeart></CiHeart>}
         </button>
         <button 
-          className="btn btn-primary"
-          onClick={() => addToCart(product)}
+          className={`btn btn-primary ${isOutOfStock ? "btn-disabled" : ""}`}
+          onClick={() => !isOutOfStock && addToCart(product)}
+          disabled={isOutOfStock}
         >
-          {quantity > 0 ? `Added (${quantity})` : <FaShoppingCart></FaShoppingCart>}
+          {isOutOfStock ? "Out of Stock" : quantity > 0 ? `Added (${quantity})` : <FaShoppingCart></FaShoppingCart>}
         </button>
       </div>
     </div>

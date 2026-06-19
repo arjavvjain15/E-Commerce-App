@@ -2263,3 +2263,26 @@ p {
 .chatbot{
   color:red;
 }
+
+/* Out of Stock styles */
+.badge-outofstock {
+  display: inline-block;
+  align-self: flex-start;
+  padding: 4px 8px;
+  background-color: var(--danger-bg);
+  color: var(--danger);
+  border: 1px solid var(--danger-hover);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.btn-disabled {
+  background-color: var(--border) !important;
+  color: var(--text) !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+  pointer-events: none;
+}

@@ -1,6 +1,7 @@
 import { processChat } from "../services/chat.services.js";
 import Chat from "../models/chat.models.js";
 
+
 export const handleChat= async(req,res,next)=>{
     try{
         const { message } = req.body;
@@ -18,6 +19,7 @@ export const handleChat= async(req,res,next)=>{
             }
         });
 
+
         if(usageRecord.lastResetDate!==today){
             await usageRecord.update({
                 queryCount: 0,
@@ -34,7 +36,7 @@ export const handleChat= async(req,res,next)=>{
         }
         catch(error){
             console.error(error);
-            return res.status(500).json({message: "AI Assistant is not available at this moment"});
+            return res.status(500).json({message: "AI Assistant is not available at this moment. Please try later"});
         }
     }
     catch(error){
