@@ -15,8 +15,6 @@ export const processChat = async (userMessage) => {
     include: [{ model: Category, attributes: ["id", "name"] }]
   });
 
-  
-
   const productsListText = products.map(p => {
     return `- Name: ${p.name}
   Description: ${p.description || "N/A"}

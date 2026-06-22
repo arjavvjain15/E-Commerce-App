@@ -46,7 +46,7 @@ function ChatBot(){
             ]);
         }
         catch(err){
-            console.error("Chat Error",err);
+            console.log("Chat Error",err);
             const status= err.response?.status;
             const dataMessage= err.response?.data?.message;
             if(status===429){

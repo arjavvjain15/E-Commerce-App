@@ -19,7 +19,6 @@ export const handleChat= async(req,res,next)=>{
             }
         });
 
-
         if(usageRecord.lastResetDate!==today){
             await usageRecord.update({
                 queryCount: 0,
@@ -27,7 +26,7 @@ export const handleChat= async(req,res,next)=>{
             });
         }
         //rate limiting
-        if(usageRecord.queryCount>=20) return res.status(429).json({message:"You have exceeded your daily query limit",limitExceeded:"true"});
+        if(usageRecord.queryCount>=50) return res.status(429).json({message:"You have exceeded your daily query limit",limitExceeded:"true"});
 
         try{
             const answer= await processChat(message);
@@ -42,4 +41,5 @@ export const handleChat= async(req,res,next)=>{
     catch(error){
         next(error);
     }
+
 };
