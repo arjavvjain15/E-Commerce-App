@@ -9,8 +9,8 @@ router.post("/login",login);
 router.post("/register",register);
 router.post("/refresh",refresh);
 router.post("/logout",logout);
-router.get("/googleOAuth",googleOAuth);
-router.get("/googleOAuthCallBack",googleOAuthCallback);
+router.get("/google",googleOAuth);
+router.get("/google/callback",googleOAuthCallback);
 router.get("/me",authMiddleware,me);
 
 export default router;

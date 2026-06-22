@@ -312,21 +312,107 @@ function Admin() {
   const handleBannerSubmit = async (e) => {
     if (e) e.preventDefault();
 
+    if (!selectedFile && !bannerForm.imageUrl) {
+      showAlert("danger", "Banner image is required");
+      return;
+    }
+
+    let activeMultipartSession = null;            //track upload info
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
+      let finalImageUrl = bannerForm.imageUrl;
+
+      if (selectedFile) {
+        const CHUNK_SIZE = 5 * 1024 * 1024; //5MB
+        if (selectedFile.size < CHUNK_SIZE) {
+          setUploadProgress(0);     
+          const formData = new FormData();
+          formData.append("image", selectedFile);
+
+          const uploadRes = await api.post("/upload", formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+            signal: controller.signal,
+            onUploadProgress: (p) => {
+              const percent = Math.round((p.loaded * 100)/ p.total);
+              setUploadProgress(percent);
+            }
+          });
+          finalImageUrl = uploadRes.data.imageUrl;
+        } 
+        else {                        //multipart case
+          setUploadProgress(0);
+
+          //start
+          const startRes= await api.post("/upload/multipart/start",{
+            fileName: selectedFile.name,                        //body
+            contentType: selectedFile.type,
+          },{
+            signal: controller.signal                           //config
+          });
+
+          const {uploadId, key}= startRes.data;
+          activeMultipartSession= {uploadId,key};
+          const totalParts= Math.ceil(selectedFile.size/CHUNK_SIZE);
+          const parts=[];
+
+          //upload parts
+          for(let partNumber=1;partNumber<=totalParts;partNumber++){
+            const start= (partNumber-1)*CHUNK_SIZE;
+            const end= Math.min(start+CHUNK_SIZE, selectedFile.size);
+            const chunk= selectedFile.slice(start,end);
+
+            const formData= new FormData();
+            formData.append("uploadId",uploadId);
+            formData.append("key",key);
+            formData.append("partNumber",partNumber);
+            formData.append("chunk",chunk);
+
+            const partRes= await api.post("/upload/multipart/part",formData,{
+              headers:{
+                "Content-Type": "multipart/form-data",
+              },
+              signal: controller.signal,
+              onUploadProgress: (p) => {
+                const chunkLoaded= p.loaded;
+                const chunkTotal= p.total || (end - start);
+                const totalLoaded= start + (chunkLoaded / chunkTotal) * (end - start);
+                const percentage= Math.round((totalLoaded / selectedFile.size) * 99);
+                setUploadProgress(percentage);
+              }
+            });
+            parts.push({PartNumber: partNumber, ETag: partRes.data.ETag});
+          };
+          
+          //complete
+          const completeRes= await api.post("/upload/multipart/complete",{
+            uploadId,key,parts,
+          },
+          {signal: controller.signal
+          });
+          finalImageUrl = completeRes.data.imageUrl;
+          setUploadProgress(100);
+        }
+      }
+
       const payload = {
         badge: bannerForm.badge,
         title: bannerForm.title,
         subtitle: bannerForm.subtitle,
-        imageUrl: bannerForm.imageUrl,
+        imageUrl: finalImageUrl,
         bg: bannerForm.bg || "linear-gradient(135deg, #1e3a8a, #0f172a)",
         categoryId: bannerForm.categoryId ? parseInt(bannerForm.categoryId, 10) : null,
       };
 
       if (editingBanner) {
-        await api.put(`/banners/${editingBanner.id}`, payload);
+        await api.put(`/banners/${editingBanner.id}`, payload, { signal: controller.signal });
         showAlert("success", "Banner updated successfully!");
       } else {
-        await api.post("/banners", payload);
+        await api.post("/banners", payload, { signal: controller.signal });
         showAlert("success", "Banner created successfully!");
       }
       setShowBannerModal(false);
@@ -339,11 +425,33 @@ function Admin() {
         bg: "",
         categoryId: "",
       });
+      setSelectedFile(null);
+      setImagePreview("");
       fetchData();
     }
     catch (err) {
+      const isAborted = err.name === "CanceledError" || err.message === "canceled" || api.isCancel?.(err);
+      if (activeMultipartSession) {
+        try {
+          await api.delete("/upload/multipart/abort", {
+            data: {
+              uploadId: activeMultipartSession.uploadId,
+              key: activeMultipartSession.key
+            }
+          });
+        } catch (abortErr) {
+          console.error("Failed to abort multipart upload", abortErr);
+        }
+      }
       console.error(err);
-      showAlert("danger", err.response?.data?.message || "Failed to save banner.");
+      if (isAborted) {
+        showAlert("warning", "Upload cancelled by user");
+      } else {
+        showAlert("danger", err.response?.data?.message || "Failed to save banner.");
+      }
+    } finally {
+      setUploadProgress(null);
+      abortControllerRef.current = null;
     }
   };
 
@@ -357,6 +465,8 @@ function Admin() {
       bg: banner.bg || "",
       categoryId: banner.categoryId || "",
     });
+    setSelectedFile(null);
+    setImagePreview(banner.imageUrl);
     setShowBannerModal(true);
   };
 
@@ -760,6 +870,7 @@ function Admin() {
         </div>
       )}
 
+      {/* Banners */}
       {activeTab === "banners" && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -776,6 +887,8 @@ function Admin() {
                   bg: "",
                   categoryId: "",
                 });
+                setSelectedFile(null);
+                setImagePreview("");
                 setShowBannerModal(true);
               }}
             >
@@ -1094,17 +1207,58 @@ function Admin() {
                 />
               </div>
 
-              <div style={{ marginBottom: "16px" }}>
-                <label className="review-form-label">Background Image URL</label>
-                <input
-                  type="url"
-                  required
-                  placeholder="e.g. https://images.unsplash.com/photo-..."
-                  className="search-input"
-                  style={{ width: "100%", paddingLeft: "12px" }}
-                  value={bannerForm.imageUrl}
-                  onChange={(e) => setBannerForm({ ...bannerForm, imageUrl: e.target.value })}
-                />
+              <div style={{ marginBottom: "24px" }}>
+                <label className="review-form-label">Banner Image</label>
+                <div className="image-input-container" style={{ border: "1px solid var(--border)", borderRadius: "8px", padding: "16px", background: "var(--card-bg)" }}>
+                  <div>
+                    <div
+                      style={{
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        border: "2px dashed var(--border)",
+                        borderRadius: "8px",
+                        padding: "24px",
+                        cursor: uploadProgress !== null ? "not-allowed" : "pointer",
+                        textAlign: "center"
+                      }}
+                      onClick={() => {
+                        if (uploadProgress === null) {
+                          document.getElementById("banner-image-file").click();
+                        }
+                      }}
+                    >
+                      <input
+                        type="file"
+                        id="banner-image-file"
+                        style={{ display: "none" }}
+                        onChange={handleFileChange}
+                        disabled={uploadProgress !== null}
+                      />
+                      <span style={{ fontSize: "0.7rem", color: "var(--text)" }}>Click to select a banner image file</span>
+                      {selectedFile && (
+                        <span style={{ fontSize: "0.8rem", color: "var(--success)", marginTop: "4px", wordBreak: "break-all" }}>
+                          Selected: {selectedFile.name}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {imagePreview && (
+                    <div style={{ marginTop: "16px", textAlign: "center" }}>
+                      <p style={{ fontSize: "0.8rem", color: "var(--text)", marginBottom: "8px" }}>Image Preview</p>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        style={{ maxWidth: "100%", maxHeight: "150px", objectFit: "contain", borderRadius: "8px", border: "1px solid var(--border)" }}
+                        onError={(e) => {
+                          e.target.style.display = "none";
+                        }}
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div style={{ marginBottom: "16px" }}>
@@ -1139,15 +1293,47 @@ function Admin() {
                 </select>
               </div>
 
+              {uploadProgress !== null && (
+                <div style={{ marginBottom: "16px", padding: "0 8px" }}>
+                  <div style={{ background: "var(--border)", width: "100%", height: "8px", borderRadius: "4px", overflow: "hidden" }}>
+                    <div style={{ background: "var(--primary)", width: `${uploadProgress}%`, height: "100%", transition: "width 0.3s" }} />
+                  </div>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: "6px" }}>
+                    <p style={{ fontSize: "0.85rem", color: "var(--text)", margin: 0 }}>
+                      Uploading file: {uploadProgress}%
+                    </p>
+                    <button
+                      type="button"
+                      onClick={handleAbortUpload}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "var(--danger)",
+                        fontSize: "0.85rem",
+                        cursor: "pointer",
+                        textDecoration: "underline",
+                        padding: 0
+                      }}
+                    >
+                    Cancel Upload
+                    </button>
+                  </div>
+                </div>
+              )}
+
               <div style={{ display: "flex", gap: "12px" }}>
-                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }} disabled={uploadProgress !== null}>
                   Save Banner
                 </button>
                 <button
                   type="button"
                   className="btn btn-secondary"
                   style={{ flex: 1 }}
-                  onClick={() => setShowBannerModal(false)}
+                  onClick={() => {
+                    setShowBannerModal(false);
+                    setEditingBanner(null);
+                  }}
+                  disabled={uploadProgress !== null}
                 >
                   Cancel
                 </button>

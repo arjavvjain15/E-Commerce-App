@@ -42,7 +42,7 @@ function ChatBot(){
         try{
             const response= await api.post("/chat",{message:userText});
             setMessages((prev)=>[
-                ...prev, {sender: "bot", text: response.data.answer, timestamp: new Date()}
+                ...prev, {sender: "bot", text: response.data.answer, timestamp: new Date(), history: messages.slice(-10)}
             ]);
         }
         catch(err){

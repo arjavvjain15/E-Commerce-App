@@ -4,7 +4,7 @@ import Chat from "../models/chat.models.js";
 
 export const handleChat= async(req,res,next)=>{
     try{
-        const { message } = req.body;
+        const { message,history=[] } = req.body;
         if(!message) return res.status(400).json({message:"Message is mandatory"});
         if(message.length>1000) return res.status(400).json({message:"Message Too Long"});
 
@@ -29,7 +29,7 @@ export const handleChat= async(req,res,next)=>{
         if(usageRecord.queryCount>=50) return res.status(429).json({message:"You have exceeded your daily query limit",limitExceeded:"true"});
 
         try{
-            const answer= await processChat(message);
+            const answer= await processChat(message,history);
             await usageRecord.increment("queryCount",{by: 1});
             return res.status(200).json({answer});
         }

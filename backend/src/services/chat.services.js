@@ -7,7 +7,7 @@ const getAiClient= ()=>{
     return new GoogleGenAI({apiKey});
 };
 
-export const processChat = async (userMessage) => {
+export const processChat = async (userMessage,history=[]) => {
 
     const allCategories = await Category.findAll();
     const products = await Product.findAll({
@@ -22,6 +22,8 @@ export const processChat = async (userMessage) => {
   Stock: ${p.stock} units available
   Category: ${p.Category ? p.Category.name : "N/A"}`;
   }).join("\n\n");
+
+  const historyText= history.map(msg=>`${msg.sender}:${msg.text}`).join("/n");
 
   const categoriesListText = allCategories.map(c => c.name).join(", ");
 
@@ -54,6 +56,13 @@ export const processChat = async (userMessage) => {
   17. Do not use Markdown, HTML, emojis, bullet points, or numbered lists.
   18. Respond naturally as a shopping assistant for the store.
   19. Your response should be crisp and concise so that in few words only, the customer is helped and has been answered waht he/she actually asked.
+  20.Use the conversation history to understand follow-up questions and references.
+
+  For example:
+  If the user says "show laptops"
+  and then says "under 50000",
+  assume they are referring to laptops unless they change the topic.
+
   
   Available Categories:
   ${categoriesListText}
@@ -63,6 +72,9 @@ export const processChat = async (userMessage) => {
   
   User Question:
   ${userMessage}
+
+  Previous Conversation:
+  ${historyText}
   `;
   
 
