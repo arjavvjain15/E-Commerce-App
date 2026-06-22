@@ -1,47 +1,6 @@
 import { useMemo, useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import api from "../api";
 import ProductCard from "../components/ProductCard";
-
-
-const BANNERS = [
-  {
-    id: 1,
-    badge: "Limited time offer",
-    title: "Bestselling Audio",
-    subtitle: "Upgrade your sound with headphones, earbuds, and speakers",
-    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
-  },
-  {
-    id: 2,
-    badge: "Power & Performance",
-    title: "Flagship Laptops",
-    subtitle: "High performance laptops for productivity, gaming, and design",
-    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
-  },
-  {
-    id: 3,
-    badge: "Next-Gen Tech",
-    title: "Ultimate Smartphone",
-    subtitle: "Get the latest smartphones with exchange offers and no-cost EMI",
-    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1598327105666-5b89351aff97?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
- 
-  },
-  {
-    id: 4,
-    badge: "New Arrival",
-    title: "Smart Watches",
-    subtitle: "Track your fitness and stay connected on the go",
-    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
-  },
-  {
-    id: 5,
-    badge: "Gamer's Choice",
-    title: "Console Gaming",
-    subtitle: "Experience next-gen gaming with top-tier consoles",
-    bg: "linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0.8)), url('https://images.unsplash.com/photo-1486401899868-0e435ed85128?w=800&auto=format&fit=crop&q=80') center/cover no-repeat",
-  },
-];
 
 const CATEGORY_PROMOS = [
   {
@@ -136,6 +95,7 @@ const BannerCarousel = ({ banners, initialSlide = 0 }) => {
 function Home() {
   const [products, setProducts] = useState([]);
   const [banners, setBanners] = useState([]);
+  const [horizontals, setHorizontals] = useState([]);
   const [search, setSearch] = useState("");
   const [selectedCategories, setSelectedCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -171,6 +131,14 @@ function Home() {
           setBanners(apiBanners);
         } else {
           setBanners(BANNERS);
+        }
+
+        try {
+          const horizontalsRes = await api.get("/horizontal");
+          setHorizontals(horizontalsRes.data || []);
+        } catch (hErr) {
+          console.error("Failed to load horizontal banners", hErr);
+          setHorizontals([]);
         }
 
       } catch (err) {
@@ -221,7 +189,16 @@ function Home() {
           </>
         )}
       </div>
-  
+
+      <div className="horizontal-row-container">
+        <div className="horizontal-row-track">
+          {(horizontals).concat(horizontals).map((h, idx) => (
+            <img key={`${h.id}-${idx}`} src={h.bg} alt="Horizontal Banners" />
+          ))}
+        </div>
+      </div>
+
+      <br></br>
       <div className="filters-bar" style={{ display: "flex", gap: "16px", flexWrap: "wrap", alignItems: "center", width: "100%", marginBottom: "24px" }}>
         <div className="search-wrapper" style={{ flex: 1, minWidth: "280px" }}>
           <input

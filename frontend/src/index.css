@@ -2286,3 +2286,39 @@ p {
   opacity: 0.6;
   pointer-events: none;
 }
+
+.horizontal-row-container {
+  overflow: hidden;
+  width: 100%;
+  position: relative;
+  background-color: var(--card-bg);
+  padding: 16px ;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  margin: 20px ;
+}
+
+.horizontal-row-track {
+  display: flex;
+  width: max-content;
+  animation: marquee-infinite 30s linear infinite;
+}
+
+.horizontal-row-track img {
+  height: 120px;
+  width: 320px;
+  margin: 0 15px;
+  border-radius: 8px;
+  object-fit: cover;
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+}
+
+@keyframes marquee-infinite {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}

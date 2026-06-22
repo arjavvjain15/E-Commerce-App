@@ -17,7 +17,7 @@ export const updateBanner=async(id,{badge,title,subtitle,bg,imageUrl,categoryId}
         error.status=404;
         throw error;
     }
-    await Banner.update({
+    await banner.update({
         badge: badge!==undefined?badge:banner.badge,
         title: title!==undefined?title:banner.title,
         subtitle: subtitle!==undefined?subtitle:banner.subtitle,

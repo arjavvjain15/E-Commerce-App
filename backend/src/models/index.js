@@ -12,7 +12,7 @@ import OrderItem from "./orderItem.model.js";
 import Review from "./review.model.js";
 import Banner from "./banner.model.js";
 import Chat from "./chat.models.js";
-
+import Horizontal from "./horizontal.model.js";
 
 // User and Session 
 User.hasMany(Session, { foreignKey: "userId", onDelete: "CASCADE" });
@@ -75,4 +75,4 @@ Review.belongsTo(Product, { foreignKey: "productId" });
 User.hasOne(Chat,{foreignKey: "userId", onDelete:"CASCADE"});
 Chat.belongsTo(User, {foreignKey: "userId"});
 
-export {sequelize,User,Session,Category,Product,Cart,CartItem,Wishlist,WishlistItem,Order,OrderItem,Review,Banner,Chat};
+export {sequelize,User,Session,Category,Product,Cart,CartItem,Wishlist,WishlistItem,Order,OrderItem,Review,Banner,Chat,Horizontal};

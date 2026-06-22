@@ -8,6 +8,7 @@ import adminRoutes from "./admin.routes.js";
 import bannerRoutes from "./banner.routes.js";
 import uploadRoutes from "./upload.routes.js";
 import chatRoutes from "./chat.routes.js";
+import horizontalRoutes from "./horizontal.routes.js";
 
 const router = Router();
 
@@ -20,5 +21,6 @@ router.use("/admin", adminRoutes);
 router.use("/banners",bannerRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/chat",chatRoutes);
+router.use("/horizontal",horizontalRoutes);
 
 export default router;
