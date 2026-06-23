@@ -2292,10 +2292,10 @@ p {
   width: 100%;
   position: relative;
   background-color: var(--card-bg);
-  padding: 16px ;
+  padding: 16px 0;
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
-  margin: 20px ;
+  margin: 45px 0 25px 0;
 }
 
 .horizontal-row-track {
@@ -2305,7 +2305,7 @@ p {
 }
 
 .horizontal-row-track img {
-  height: 120px;
+  height: 180px;
   width: 320px;
   margin: 0 15px;
   border-radius: 8px;

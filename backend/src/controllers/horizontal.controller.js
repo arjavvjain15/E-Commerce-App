@@ -28,7 +28,7 @@ export const update= async(req,res,next)=>{
         res.status(200).json(hori);
     }
     catch(error){
-        next(error);
+        next(error); 
     }
 }
 

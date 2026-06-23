@@ -810,7 +810,7 @@ function Admin() {
           className={`admin-tab-btn ${activeTab === "horizontal" ? "active" : ""}`}
           onClick={() => setActiveTab("horizontal")}
         >
-          Horizontal Row
+          Horizontal Banners
         </button>
       </div>
 
@@ -1130,7 +1130,7 @@ function Admin() {
         </div>
       )}
 
-
+      {/* Horizontal Banners */}
       {activeTab === "horizontal" && (
         <div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "16px" }}>
@@ -1162,7 +1162,7 @@ function Admin() {
                 {horizontals.length === 0 ? (
                   <tr>
                     <td colSpan="3" style={{ textAlign: "center", padding: "24px", fontStyle: "italic", color: "var(--text)" }}>
-                      No horizontal banners found in database. The storefront will fall back to mock banners.
+                      No horizontal banners found in database.
                     </td>
                   </tr>
                 ) : (
