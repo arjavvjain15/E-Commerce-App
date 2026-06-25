@@ -1,4 +1,5 @@
 import { Order, OrderItem, Cart, CartItem, Product, sequelize } from "../models/index.js";
+import { sendOrderToQueue } from "../producers/order.producer.js";
 
 export const checkoutCart = async (userId, { shippingAddress }) => {
   const transaction = await sequelize.transaction();
@@ -56,12 +57,24 @@ export const checkoutCart = async (userId, { shippingAddress }) => {
     await CartItem.destroy({ where: { cartId: cart.id } }, { transaction });
 
     await transaction.commit();
+
+    try {
+      await sendOrderToQueue({
+        orderId: order.id,
+        userId: order.userId,
+        shippingAddress: order.shippingAddress,
+      });
+    } catch (sqsError) {
+      console.error("[SQS Producer] Order placed, but SQS queue dispatch failed:", sqsError);
+    }
+
     return order;
   } catch (error) {
     await transaction.rollback();
     throw error;
   }
 };
+
 
 export const updateOrderStatus = async (orderId, status) => {
   const order = await Order.findByPk(orderId);

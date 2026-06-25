@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "worker:order": "node src/workers/order.worker.js",
+    "worker:dlq": "node src/workers/dlq.worker.js"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +17,8 @@
   "dependencies": {
     "@aws-sdk/client-iam": "^3.1066.0",
     "@aws-sdk/client-s3": "^3.1067.0",
+    "@aws-sdk/client-ses": "^3.1075.0",
+    "@aws-sdk/client-sqs": "^3.1075.0",
     "@google/genai": "^2.8.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
