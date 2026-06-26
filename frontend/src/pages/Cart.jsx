@@ -18,7 +18,7 @@ function Cart() {
     setIsCheckingOut(true);
     try {
       await api.post("/orders", { shippingAddress });
-      alert("Order placed successfully!");
+      alert("Your order is under processing...");
       await fetchCart();
       setShowCheckoutModal(false);
       setShippingAddress("");

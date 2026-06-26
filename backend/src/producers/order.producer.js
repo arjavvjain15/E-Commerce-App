@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 dotenv.config();
 
 export const sendOrderToQueue= async({orderId,userId,shippingAddress})=>{
-  const queueUrl= PROCESS.ENV.ORDER_QUEUE_URL;
+  const queueUrl= process.env.ORDER_QUEUE_URL;
   if(!queueUrl) throw new Error("Queue URL is missing");
   const payload={
     orderId,userId,shippingAddress,
