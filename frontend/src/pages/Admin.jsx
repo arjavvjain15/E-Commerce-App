@@ -71,8 +71,8 @@ function Admin() {
         api.get("/products?includeDrafts=true"),
         api.get("/admin/orders"),
         api.get("/admin/users"),
-        api.get("/banners"),
-        api.get("/horizontal"),
+        api.get("/banners?includeDrafts=true"),
+        api.get("/horizontal?includeDrafts=true"),
       ]);
       setProducts(productsRes.data);
       setOrders(ordersRes.data);
@@ -889,24 +889,25 @@ function Admin() {
                       </span>
                     </td>
                     <td>
-                      <div style={{ display: "flex", gap: "8px" }}>
-                        {prod.status === "draft" && (
-                          <button
-                            className="btn btn-primary"
-                            style={{ padding: "6px 10px", fontSize: "0.8rem" }}
-                            onClick={async () => {
-                              try {
-                                await api.put(`/products/${prod.id}`, { status: "active" });
-                                showAlert("success", "Product published successfully!");
+                      <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                        <label className="switch" title={prod.status === "active" ? "Disable Product" : "Enable Product"}>
+                          <input 
+                            type="checkbox" 
+                            checked={prod.status === "active"} 
+                            onChange={async () => {
+                              const newStatus = prod.status === "active" ? "draft" : "active";
+                              try{
+                                await api.put(`/products/${prod.id}`, { status: newStatus });
+                                showAlert("success", `Product ${newStatus === "active" ? "enabled" : "disabled"} successfully!`);
                                 fetchData();
-                              } catch (err) {
-                                showAlert("danger", "Failed to publish product.");
+                              }
+                              catch(err){
+                                showAlert("danger", "Failed to update product status.");
                               }
                             }}
-                          >
-                            Publish
-                          </button>
-                        )}
+                          />
+                          <span className="slider"></span>
+                        </label>
                         <button className="btn btn-secondary" style={{ padding: "6px 10px", fontSize: "0.8rem" }} onClick={() => handleEditProduct(prod)}>
                           Edit
                         </button>
@@ -1069,13 +1070,14 @@ function Admin() {
                   <th>Badge</th>
                   <th>Target Category</th>
                   <th>Background</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {banners.length === 0 ? (
                   <tr>
-                    <td colSpan="6" style={{ textAlign: "center", padding: "24px", fontStyle: "italic", color: "var(--text)" }}>
+                    <td colSpan="7" style={{ textAlign: "center", padding: "24px", fontStyle: "italic", color: "var(--text)" }}>
                       No banners found in database. The storefront will fall back to mock banners.
                     </td>
                   </tr>
@@ -1104,7 +1106,29 @@ function Admin() {
                         {b.bg || "default gradient"}
                       </td>
                       <td>
-                        <div style={{ display: "flex", gap: "8px" }}>
+                        <span className={`badge-status ${b.status === "active" || b.status === undefined ? "completed" : "draft"}`}>
+                          {b.status || "active"}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <label className="switch" title={b.status === "active" || b.status === undefined ? "Disable Banner" : "Enable Banner"}>
+                            <input 
+                              type="checkbox" 
+                              checked={b.status === "active" || b.status === undefined} 
+                              onChange={async () => {
+                                const newStatus = b.status === "active" || b.status === undefined ? "draft" : "active";
+                                try {
+                                  await api.put(`/banners/${b.id}`, { status: newStatus });
+                                  showAlert("success", `Banner ${newStatus === "active" ? "enabled" : "disabled"} successfully!`);
+                                  fetchData();
+                                } catch (err) {
+                                  showAlert("danger", "Failed to update banner status.");
+                                }
+                              }}
+                            />
+                            <span className="slider"></span>
+                          </label>
                           <button
                             className="btn btn-secondary"
                             style={{ padding: "6px 10px", fontSize: "0.8rem" }}
@@ -1155,13 +1179,14 @@ function Admin() {
                 <tr>
                   <th>Image Preview</th>
                   <th>Image URL</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {horizontals.length === 0 ? (
                   <tr>
-                    <td colSpan="3" style={{ textAlign: "center", padding: "24px", fontStyle: "italic", color: "var(--text)" }}>
+                    <td colSpan="4" style={{ textAlign: "center", padding: "24px", fontStyle: "italic", color: "var(--text)" }}>
                       No horizontal banners found in database.
                     </td>
                   </tr>
@@ -1179,7 +1204,29 @@ function Admin() {
                         {h.bg}
                       </td>
                       <td>
-                        <div style={{ display: "flex", gap: "8px" }}>
+                        <span className={`badge-status ${h.status === "active" || h.status === undefined ? "completed" : "draft"}`}>
+                          {h.status || "active"}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+                          <label className="switch" title={h.status === "active" || h.status === undefined ? "Disable Horizontal Banner" : "Enable Horizontal Banner"}>
+                            <input 
+                              type="checkbox" 
+                              checked={h.status === "active" || h.status === undefined} 
+                              onChange={async () => {
+                                const newStatus = h.status === "active" || h.status === undefined ? "draft" : "active";
+                                try {
+                                  await api.put(`/horizontal/${h.id}`, { status: newStatus });
+                                  showAlert("success", `Horizontal banner ${newStatus === "active" ? "enabled" : "disabled"} successfully!`);
+                                  fetchData();
+                                } catch (err) {
+                                  showAlert("danger", "Failed to update horizontal banner status.");
+                                }
+                              }}
+                            />
+                            <span className="slider"></span>
+                          </label>
                           <button
                             className="btn btn-secondary"
                             style={{ padding: "6px 10px", fontSize: "0.8rem" }}

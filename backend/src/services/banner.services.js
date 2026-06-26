@@ -1,16 +1,24 @@
 import {Banner,Category} from "../models/index.js";
 
-export const getAllBanners=async()=>{
-    return await Banner.findAll({include:[{model:Category,attributes:["id","name"]}]});
-}
-
-export const createBanner=async({badge,title,subtitle,bg,imageUrl,categoryId})=>{
-    return await Banner.create({
-        badge,title,subtitle,imageUrl,bg,categoryId: categoryId ||null
+export const getAllBanners=async({ includeDrafts = false } = {})=>{
+    const where = {};
+    if (!includeDrafts) {
+        where.status = "active";
+    }
+    return await Banner.findAll({
+        where,
+        include:[{model:Category,attributes:["id","name"]}]
     });
 }
 
-export const updateBanner=async(id,{badge,title,subtitle,bg,imageUrl,categoryId})=>{
+export const createBanner=async({badge,title,subtitle,bg,imageUrl,categoryId,status})=>{
+    return await Banner.create({
+        badge,title,subtitle,imageUrl,bg,categoryId: categoryId ||null,
+        status: status || "active"
+    });
+}
+
+export const updateBanner=async(id,{badge,title,subtitle,bg,imageUrl,categoryId,status})=>{
     const banner=await Banner.findByPk(id);
     if(!banner){
         const error=new Error("Banner not found");
@@ -24,6 +32,7 @@ export const updateBanner=async(id,{badge,title,subtitle,bg,imageUrl,categoryId}
         bg: bg!==undefined?bg:banner.bg,
         imageUrl: imageUrl!==undefined?imageUrl:banner.imageUrl,
         categoryId: categoryId!==undefined?categoryId:banner.categoryId,
+        status: status!==undefined?status:banner.status,
     });
     return banner;
 }

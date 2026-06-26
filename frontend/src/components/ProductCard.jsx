@@ -43,8 +43,20 @@ function ProductCard({ product }) {
           className={`btn btn-primary ${isOutOfStock ? "btn-disabled" : ""}`}
           onClick={() => !isOutOfStock && addToCart(product)}
           disabled={isOutOfStock}
+          style={!isOutOfStock ? { position: "relative" } : undefined}
         >
-          {isOutOfStock ? "Out of Stock" : quantity > 0 ? `Added (${quantity})` : <FaShoppingCart></FaShoppingCart>}
+          {isOutOfStock ? (
+            "Out of Stock"
+          ) : (
+            <>
+              <FaShoppingCart />
+              {quantity > 0 && (
+                <span className="badge cart-badge button-badge">
+                  {quantity}
+                </span>
+              )}
+            </>
+          )}
         </button>
       </div>
     </div>

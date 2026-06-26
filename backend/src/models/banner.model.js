@@ -31,6 +31,11 @@ const Banner = sequelize.define("Banner", {
     type: DataTypes.INTEGER,
     allowNull: true,
   },
+  status: {
+    type: DataTypes.ENUM("active", "draft"),
+    defaultValue: "active",
+    allowNull: false,
+  },
 });
 
 export default Banner;

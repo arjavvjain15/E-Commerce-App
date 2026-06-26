@@ -30,8 +30,7 @@ const pollMessages = async () => {
       MaxNumberOfMessages: 10,
       WaitTimeSeconds: 20, 
       VisibilityTimeout: 30, 
-    };
-  
+    };  
     try {
       const data = await sqsClient.send(new ReceiveMessageCommand(params));
       if(data.Messages && data.Messages.length > 0){
@@ -66,7 +65,7 @@ const startWorker = async () => {
       console.log(`SQS worker started on Main queue`);
       console.log("Listening for messages");
 
-      while (true) {                //infinite polling 
+      while(true){              //infinite loop
         await pollMessages();
       }
     }

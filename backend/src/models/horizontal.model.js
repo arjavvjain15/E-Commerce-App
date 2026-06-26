@@ -10,7 +10,12 @@ const Horizontal = sequelize.define("Horizontal", {
   bg:{
     type: DataTypes.STRING,
     allowNull: false,
-  }
+  },
+  status: {
+    type: DataTypes.ENUM("active", "draft"),
+    defaultValue: "active",
+    allowNull: false,
+  },
 });
 
 export default Horizontal;
